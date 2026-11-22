@@ -1,3 +1,4 @@
+
 package my.kingdomvortex.vortexgems.gui;
 
 import my.kingdomvortex.vortexgems.VortexGems;
@@ -41,6 +42,14 @@ public final class MenuManager {
 
     public void openRewardEditor(Player player) {
         new RewardEditorMenu(plugin).open(player);
+    }
+
+    public void openRewardCategory(Player player, String category) {
+        new RewardEditorMenu(plugin).openCategory(player, category);
+    }
+
+    public void openRewardCreate(Player player, String category) {
+        new RewardCreateMenu(plugin).open(player, category);
     }
 
     public void openSettings(Player player) {
