@@ -12,6 +12,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.ClickType;
 import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.inventory.InventoryDragEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 
@@ -69,21 +70,54 @@ public final class MenuListener implements Listener {
         }
     }
 
+    @EventHandler
+    public void onInventoryDrag(InventoryDragEvent event) {
+        Inventory top = event.getView().getTopInventory();
+
+        if (!(top.getHolder() instanceof MenuHolder holder)) {
+            return;
+        }
+
+        if (holder.getMenu().equalsIgnoreCase("REWARD_CREATE")) {
+            for (int rawSlot : event.getRawSlots()) {
+                if (rawSlot < top.getSize()) {
+                    event.setCancelled(true);
+                    return;
+                }
+            }
+        }
+    }
+
     private void handleRewardCreate(
             InventoryClickEvent event,
             Player player,
             Inventory inventory,
             MenuHolder holder
     ) {
-        event.setCancelled(true);
+        String category = holder.getData();
 
-        if (event.getClickedInventory() != inventory) {
+        // Klik inventory pemain tetap diizinkan agar item bisa diambil.
+        if (event.getClickedInventory() == player.getInventory()) {
+            if (event.isShiftClick()
+                    || event.getClick() == ClickType.NUMBER_KEY
+                    || event.getClick() == ClickType.DOUBLE_CLICK
+                    || event.getClick() == ClickType.SWAP_OFFHAND) {
+                event.setCancelled(true);
+            }
             return;
         }
 
-        int slot = event.getRawSlot();
-        String category = holder.getData();
+        // Batalkan klik di luar GUI.
+        if (event.getClickedInventory() != inventory) {
+            event.setCancelled(true);
+            return;
+        }
 
+        event.setCancelled(true);
+
+        int slot = event.getRawSlot();
+
+        // SLOT ITEM REWARD
         if (slot == 13) {
             if (event.getClick() != ClickType.LEFT
                     && event.getClick() != ClickType.RIGHT) {
@@ -93,39 +127,45 @@ public final class MenuListener implements Listener {
             ItemStack cursor = event.getCursor();
             ItemStack current = inventory.getItem(13);
 
-            if (cursor == null || cursor.getType().isAir()) {
-                if (current == null
-                        || current.getType().isAir()
-                        || current.getType() == Material.HOPPER) {
+            boolean hasCursor = cursor != null
+                    && !cursor.getType().isAir()
+                    && cursor.getAmount() > 0;
+
+            boolean hasCurrent = current != null
+                    && !current.getType().isAir()
+                    && current.getType() != Material.HOPPER;
+
+            if (!hasCursor) {
+                if (!hasCurrent) {
                     return;
                 }
 
                 event.setCursor(current.clone());
                 inventory.setItem(13, new ItemStack(Material.HOPPER));
-
-            } else {
-                if (cursor.getType() == Material.HOPPER) {
-                    return;
-                }
-
-                inventory.setItem(13, cursor.clone());
-
-                event.setCursor(
-                        current != null && current.getType() != Material.HOPPER
-                                ? current.clone()
-                                : null
-                );
+                return;
             }
+
+            if (cursor.getType() == Material.HOPPER) {
+                return;
+            }
+
+            inventory.setItem(13, cursor.clone());
+
+            event.setCursor(
+                    hasCurrent ? current.clone() : null
+            );
 
             return;
         }
 
+        // SET REWARD PRICE
         if (slot == 11) {
             player.closeInventory();
             new RewardCreateMenu(plugin).promptPrice(player, category);
             return;
         }
 
+        // SAVE REWARD
         if (slot == 15) {
             boolean saved = new RewardCreateMenu(plugin).save(
                     player,
@@ -140,6 +180,7 @@ public final class MenuListener implements Listener {
             return;
         }
 
+        // CANCEL
         if (slot == 22) {
             RewardCreateMenu.clearPrice(player.getUniqueId());
             plugin.getMenuManager().openRewardCategory(player, category);
