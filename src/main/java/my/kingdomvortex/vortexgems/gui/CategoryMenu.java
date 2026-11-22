@@ -6,7 +6,6 @@ import my.kingdomvortex.vortexgems.util.ColorUtil;
 import my.kingdomvortex.vortexgems.util.ItemUtil;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
-import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 
@@ -21,9 +20,8 @@ public final class CategoryMenu {
     }
 
     public void open(Player player) {
-        FileConfiguration config = plugin.getConfig();
+        int size = plugin.getConfig().getInt("gui.category.size", 54);
 
-        int size = config.getInt("gui.category.size", 54);
         if (size < 9 || size > 54 || size % 9 != 0) {
             size = 54;
         }
@@ -33,9 +31,9 @@ public final class CategoryMenu {
         Inventory inventory = Bukkit.createInventory(
                 holder,
                 size,
-                ColorUtil.text(config.getString(
+                ColorUtil.text(plugin.getConfig().getString(
                         "gui.category.title",
-                        "<dark_gray>Gems Shop"
+                        "<dark_gray>ɢᴇᴍѕ ѕʜᴏᴘ | ᴄᴀᴛᴇɢᴏʀɪᴇѕ"
                 ))
         );
 
@@ -53,27 +51,38 @@ public final class CategoryMenu {
             }
 
             Material material = plugin.getCategoryManager().getMaterial(id);
+
+            if (material == null || material.isAir()) {
+                material = Material.CHEST;
+            }
+
             String name = plugin.getCategoryManager().getName(id);
 
             List<String> lore = plugin.getCategoryManager().getLore(id);
-            lore.add("");
-            lore.add("<yellow>Click to view rewards");
 
             inventory.setItem(slot, ItemUtil.create(
                     material,
                     plugin.getCategoryManager().getAmount(id),
-                    name,
-                    lore
+                    "<gradient:#55ff55:#00aaaa><bold>" + name + "</bold></gradient>",
+                    lore == null || lore.isEmpty()
+                            ? List.of(
+                                    "",
+                                    "<gray>ᴠɪᴇᴡ ʀᴇᴡᴀʀᴅѕ ɪɴ ᴛʜɪѕ",
+                                    "<gray>ᴄᴀᴛᴇɢᴏʀʏ.",
+                                    "",
+                                    "<yellow>ᴄʟɪᴄᴋ ᴛᴏ ᴏᴘᴇɴ"
+                            )
+                            : lore
             ));
         }
 
         inventory.setItem(size - 5, ItemUtil.create(
                 Material.ARROW,
                 1,
-                "<yellow><bold>BACK</bold>",
+                "<yellow><bold>ʙᴀᴄᴋ</bold>",
                 List.of(
                         "",
-                        "<gray>Return to main menu."
+                        "<gray>ʀᴇᴛᴜʀɴ ᴛᴏ ᴍᴀɪɴ ᴍᴇɴᴜ"
                 )
         ));
 
