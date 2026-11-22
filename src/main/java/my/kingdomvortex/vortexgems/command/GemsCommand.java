@@ -1,3 +1,4 @@
+
 package my.kingdomvortex.vortexgems.command;
 
 import my.kingdomvortex.vortexgems.VortexGems;
@@ -54,24 +55,36 @@ public final class GemsCommand implements CommandExecutor, TabCompleter {
     }
 
     private void showBalance(Player player, String[] args) {
-        OfflinePlayer target = player;
-
         if (args.length >= 2) {
-            target = Bukkit.getOfflinePlayer(args[1]);
+            OfflinePlayer target = Bukkit.getOfflinePlayer(args[1]);
 
             if (!target.hasPlayedBefore() && !target.isOnline()) {
                 player.sendMessage(ColorUtil.text("<red>Player not found."));
                 return;
             }
+
+            long balance = plugin.getGemsManager().getBalance(
+                    target.getUniqueId()
+            );
+
+            player.sendMessage(ColorUtil.text("<dark_gray>━━━━━━━━━━━━━━━━━━━━"));
+            player.sendMessage(ColorUtil.text("<gold><bold>GEMS BALANCE"));
+            player.sendMessage(ColorUtil.text(
+                    "<gray>Player: <white>" + target.getName()
+            ));
+            player.sendMessage(ColorUtil.text(
+                    "<gray>Balance: <aqua>" + ColorUtil.formatGems(balance)
+            ));
+            player.sendMessage(ColorUtil.text("<dark_gray>━━━━━━━━━━━━━━━━━━━━"));
+            return;
         }
 
-        long balance = plugin.getGemsManager().getBalance(target.getUniqueId());
+        long balance = plugin.getGemsManager().getBalance(
+                player.getUniqueId()
+        );
 
         player.sendMessage(ColorUtil.text("<dark_gray>━━━━━━━━━━━━━━━━━━━━"));
-        player.sendMessage(ColorUtil.text("<gold><bold>GEMS BALANCE"));
-        player.sendMessage(ColorUtil.text(
-                "<gray>Player: <white>" + target.getName()
-        ));
+        player.sendMessage(ColorUtil.text("<gold><bold>YOUR GEMS"));
         player.sendMessage(ColorUtil.text(
                 "<gray>Balance: <aqua>" + ColorUtil.formatGems(balance)
         ));
@@ -79,12 +92,10 @@ public final class GemsCommand implements CommandExecutor, TabCompleter {
     }
 
     private void transfer(Player player, String[] args) {
-        if (!player.hasPermission("vortexgems.pay")) {
-            player.sendMessage(ColorUtil.text("<red>You don't have permission."));
-            return;
-        }
-
-        if (!plugin.getConfig().getBoolean("settings.transfer.enabled", true)) {
+        if (!plugin.getConfig().getBoolean(
+                "settings.transfer.enabled",
+                true
+        )) {
             player.sendMessage(ColorUtil.text(
                     "<red>Gems transfer is currently disabled."
             ));
@@ -101,7 +112,9 @@ public final class GemsCommand implements CommandExecutor, TabCompleter {
         Player target = Bukkit.getPlayerExact(args[1]);
 
         if (target == null) {
-            player.sendMessage(ColorUtil.text("<red>That player is not online."));
+            player.sendMessage(ColorUtil.text(
+                    "<red>That player is not online."
+            ));
             return;
         }
 
@@ -122,31 +135,36 @@ public final class GemsCommand implements CommandExecutor, TabCompleter {
         }
 
         long minimum = plugin.getConfig().getLong(
-                "settings.transfer.minimum", 1
+                "settings.transfer.minimum",
+                1
         );
 
         long maximum = plugin.getConfig().getLong(
-                "settings.transfer.maximum", 1000000
+                "settings.transfer.maximum",
+                1000000
         );
 
-        if (amount < minimum || amount > maximum) {
+        if (amount < minimum) {
             player.sendMessage(ColorUtil.text(
-                    "<red>Transfer amount must be between <white>"
-                            + ColorUtil.format(minimum)
-                            + "<red> and <white>"
-                            + ColorUtil.format(maximum) + " Gems."
+                    "<red>Minimum transfer amount: <white>" +
+                            ColorUtil.formatGems(minimum)
             ));
             return;
         }
 
-        String senderName = player.getName();
-        String receiverName = target.getName();
+        if (amount > maximum) {
+            player.sendMessage(ColorUtil.text(
+                    "<red>Maximum transfer amount: <white>" +
+                            ColorUtil.formatGems(maximum)
+            ));
+            return;
+        }
 
         boolean success = plugin.getGemsManager().transfer(
                 player.getUniqueId(),
-                senderName,
+                player.getName(),
                 target.getUniqueId(),
-                receiverName,
+                target.getName(),
                 amount
         );
 
@@ -161,32 +179,32 @@ public final class GemsCommand implements CommandExecutor, TabCompleter {
                 player.getUniqueId(),
                 "TRANSFER_OUT",
                 amount,
-                "Transferred to " + receiverName
+                "Transferred to " + target.getName()
         );
 
         plugin.getTransactionManager().record(
                 target.getUniqueId(),
                 "TRANSFER_IN",
                 amount,
-                "Received from " + senderName
+                "Received from " + player.getName()
         );
 
+        String formatted = ColorUtil.formatGems(amount);
+
         player.sendMessage(ColorUtil.text(
-                "<green>You sent <aqua>" + ColorUtil.formatGems(amount)
-                        + " <green>to <white>" + receiverName + "<green>."
+                "<green>You sent <aqua>" + formatted +
+                        " <green>to <white>" + target.getName() + "<green>."
         ));
 
         target.sendMessage(ColorUtil.text(
-                "<green>You received <aqua>" + ColorUtil.formatGems(amount)
-                        + " <green>from <white>" + senderName + "<green>."
+                "<green>You received <aqua>" + formatted +
+                        " <green>from <white>" + player.getName() + "<green>."
         ));
     }
 
     private void sendHelp(Player player) {
         player.sendMessage(ColorUtil.text("<dark_gray>━━━━━━━━━━━━━━━━━━━━"));
-        player.sendMessage(ColorUtil.text(
-                "<gradient:#00E5FF:#7B61FF><bold>VORTEX GEMS</bold></gradient>"
-        ));
+        player.sendMessage(ColorUtil.text("<gold><bold>VORTEX GEMS"));
         player.sendMessage(ColorUtil.text(
                 "<yellow>/gems <gray>- Open Gems menu"
         ));
@@ -219,18 +237,26 @@ public final class GemsCommand implements CommandExecutor, TabCompleter {
 
         if (args.length == 1) {
             suggestions.addAll(List.of(
-                    "balance", "pay", "shop", "buy", "help"
+                    "balance",
+                    "bal",
+                    "pay",
+                    "transfer",
+                    "shop",
+                    "store",
+                    "buy",
+                    "help"
             ));
-        } else if (args.length == 2
-                && (args[0].equalsIgnoreCase("pay")
-                || args[0].equalsIgnoreCase("balance"))) {
-
+        } else if (args.length == 2 &&
+                (args[0].equalsIgnoreCase("pay")
+                        || args[0].equalsIgnoreCase("transfer")
+                        || args[0].equalsIgnoreCase("balance")
+                        || args[0].equalsIgnoreCase("bal"))) {
             for (Player online : Bukkit.getOnlinePlayers()) {
                 suggestions.add(online.getName());
             }
-        } else if (args.length == 3
-                && args[0].equalsIgnoreCase("pay")) {
-
+        } else if (args.length == 3 &&
+                (args[0].equalsIgnoreCase("pay")
+                        || args[0].equalsIgnoreCase("transfer"))) {
             suggestions.addAll(List.of("100", "500", "1000"));
         }
 
@@ -240,4 +266,4 @@ public final class GemsCommand implements CommandExecutor, TabCompleter {
                 .filter(value -> value.toLowerCase(Locale.ROOT).startsWith(input))
                 .toList();
     }
-                           }
+}
