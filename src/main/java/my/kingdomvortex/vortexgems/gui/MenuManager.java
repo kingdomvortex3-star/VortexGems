@@ -25,11 +25,11 @@ public final class MenuManager {
     }
 
     public void openRewards(Player player, String category) {
-        new RewardMenu(plugin, category).open(player);
+        new RewardMenu(plugin).open(player, category);
     }
 
     public void openConfirm(Player player, String rewardId) {
-        new ConfirmMenu(plugin, rewardId).open(player);
+        new ConfirmMenu(plugin).open(player, rewardId);
     }
 
     public void openAdmin(Player player) {
