@@ -2,8 +2,8 @@
 package my.kingdomvortex.vortexgems.gui;
 
 import my.kingdomvortex.vortexgems.VortexGems;
+import my.kingdomvortex.vortexgems.util.ColorUtil;
 import my.kingdomvortex.vortexgems.util.ItemUtil;
-import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -20,65 +20,88 @@ public final class AdminMenu {
     }
 
     public void open(Player player) {
-        int size = 45;
-
         MenuHolder holder = new MenuHolder("ADMIN");
 
         Inventory inventory = Bukkit.createInventory(
                 holder,
-                size,
-                Component.text("VORTEX GEMS ADMIN")
+                45,
+                ColorUtil.text(
+                        "<gradient:#00D9FF:#9B5CFF><bold>ᴠᴏʀᴛᴇx ᴀᴅᴍɪɴ ᴍᴇɴᴜ</bold></gradient>"
+                )
         );
 
         holder.setInventory(inventory);
 
-        for (int slot = 0; slot < size; slot++) {
+        for (int slot = 0; slot < 45; slot++) {
             inventory.setItem(slot, ItemUtil.filler());
         }
 
         inventory.setItem(11, ItemUtil.create(
                 Material.CHEST,
                 1,
-                "<gold><bold>CATEGORY MANAGER</bold>",
+                "<gradient:#55E7FF:#A78BFA><bold>ᴄᴀᴛᴇɢᴏʀʏ ᴍᴀɴᴀɢᴇʀ</bold></gradient>",
                 List.of(
                         "",
-                        "<gray>Create, edit and delete categories.",
+                        "<gray>ᴍᴀɴᴀɢᴇ ʏᴏᴜʀ ѕʜᴏᴘ ᴄᴀᴛᴇɢᴏʀɪᴇѕ.",
                         "",
-                        "<yellow>Click to open"
+                        "<dark_gray>━━━━━━━━━━━━━━━━",
+                        "<aqua>• <gray>ᴄʀᴇᴀᴛᴇ ᴄᴀᴛᴇɢᴏʀɪᴇ",
+                        "<aqua>• <gray>ᴇᴅɪᴛ ѕʟᴏᴛ",
+                        "<aqua>• <gray>ᴇɴᴀʙʟᴇ / ᴅɪѕᴀʙʟᴇ",
+                        "<aqua>• <gray>ᴅᴇʟᴇᴛᴇ ᴄᴀᴛᴇɢᴏʀɪᴇ",
+                        "<dark_gray>━━━━━━━━━━━━━━━━",
+                        "",
+                        "<yellow>ᴄʟɪᴄᴋ ᴛᴏ ᴏᴘᴇɴ"
                 )
         ));
 
         inventory.setItem(13, ItemUtil.create(
                 Material.DIAMOND,
                 1,
-                "<aqua><bold>REWARD MANAGER</bold>",
+                "<gradient:#00E5FF:#448AFF><bold>ʀᴇᴡᴀʀᴅ ᴍᴀɴᴀɢᴇʀ</bold></gradient>",
                 List.of(
                         "",
-                        "<gray>Create and edit shop rewards.",
+                        "<gray>ᴍᴀɴᴀɢᴇ ʏᴏᴜʀ ɢᴇᴍѕ ѕʜᴏᴘ ʀᴇᴡᴀʀᴅѕ.",
                         "",
-                        "<yellow>Click to open"
+                        "<dark_gray>━━━━━━━━━━━━━━━━",
+                        "<aqua>• <gray>ᴄʀᴇᴀᴛᴇ ʀᴇᴡᴀʀᴅ",
+                        "<aqua>• <gray>ѕᴇᴛ ɢᴇᴍѕ ᴘʀɪᴄᴇ",
+                        "<aqua>• <gray>ᴇᴅɪᴛ ʀᴇᴡᴀʀᴅ",
+                        "<aqua>• <gray>ᴇɴᴀʙʟᴇ / ᴅɪѕᴀʙʟᴇ",
+                        "<dark_gray>━━━━━━━━━━━━━━━━",
+                        "",
+                        "<yellow>ᴄʟɪᴄᴋ ᴛᴏ ᴏᴘᴇɴ"
                 )
         ));
 
         inventory.setItem(15, ItemUtil.create(
                 Material.COMPARATOR,
                 1,
-                "<light_purple><bold>GEMS SETTINGS</bold>",
+                "<gradient:#D580FF:#FF80AB><bold>ɢᴇᴍѕ ѕᴇᴛᴛɪɴɢѕ</bold></gradient>",
                 List.of(
                         "",
-                        "<gray>Configure buying and economy.",
+                        "<gray>ᴄᴏɴꜰɪɢᴜʀᴇ ᴠᴏʀᴛᴇxɢᴇᴍѕ.",
                         "",
-                        "<yellow>Click to open"
+                        "<dark_gray>━━━━━━━━━━━━━━━━",
+                        "<light_purple>• <gray>ᴇᴄᴏɴᴏᴍʏ ѕᴇᴛᴛɪɴɢѕ",
+                        "<light_purple>• <gray>ᴛʀᴀɴѕꜰᴇʀ ѕᴇᴛᴛɪɴɢѕ",
+                        "<light_purple>• <gray>ᴀᴅᴍɪɴ ᴘᴇʀᴍɪѕѕɪᴏɴ",
+                        "<light_purple>• <gray>ʟᴇᴀᴅᴇʀʙᴏᴀʀᴅ",
+                        "<dark_gray>━━━━━━━━━━━━━━━━",
+                        "",
+                        "<yellow>ᴄʟɪᴄᴋ ᴛᴏ ᴏᴘᴇɴ"
                 )
         ));
 
         inventory.setItem(31, ItemUtil.create(
                 Material.BARRIER,
                 1,
-                "<red><bold>CLOSE</bold>",
+                "<gradient:#FF5252:#FF8A65><bold>ᴄʟᴏѕᴇ ᴍᴇɴᴜ</bold></gradient>",
                 List.of(
                         "",
-                        "<gray>Close administration menu."
+                        "<gray>ᴄʟᴏѕᴇ ᴛʜᴇ ᴀᴅᴍɪɴ ᴍᴇɴᴜ.",
+                        "",
+                        "<red>ᴄʟɪᴄᴋ ᴛᴏ ᴄʟᴏѕᴇ"
                 )
         ));
 
