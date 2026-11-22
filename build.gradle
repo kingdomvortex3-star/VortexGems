@@ -44,7 +44,10 @@ tasks.withType(JavaCompile).configureEach {
 shadowJar {
     archiveClassifier = ''
 
-    relocate 'org.sqlite', 'my.kingdomvortex.vortexgems.libs.sqlite'
+    relocate(
+        'org.sqlite',
+        'my.kingdomvortex.vortexgems.libs.sqlite'
+    )
 }
 
 build {
