@@ -1,3 +1,4 @@
+
 package my.kingdomvortex.vortexgems.listener;
 
 import my.kingdomvortex.vortexgems.VortexGems;
@@ -19,31 +20,38 @@ public final class PlayerListener implements Listener {
     public void onPlayerJoin(PlayerJoinEvent event) {
         Player player = event.getPlayer();
 
-        plugin.getGemsManager().createAccount(
+        boolean created = plugin.getGemsManager().createAccount(
                 player.getUniqueId(),
                 player.getName()
         );
 
-        if (!plugin.getConfig().getBoolean(
-                "settings.join-message.enabled", false
-        )) {
-            return;
+        if (!created) {
+            plugin.getLogger().warning(
+                    "Failed to create/update Gems account for " + player.getName()
+            );
         }
 
-        String message = plugin.getConfig().getString(
-                "settings.join-message.message",
-                "<gray>Welcome back, <white>{player}<gray>!"
-        );
+        if (plugin.getConfig().getBoolean(
+                "settings.join-message.enabled",
+                false
+        )) {
+            String message = plugin.getConfig().getString(
+                    "settings.join-message.message",
+                    "<gray>Welcome back, <white>{player}<gray>!"
+            );
 
-        message = ColorUtil.replace(message, "player", player.getName());
-        message = ColorUtil.replace(
-                message,
-                "balance",
-                ColorUtil.format(
-                        plugin.getGemsManager().getBalance(player.getUniqueId())
-                )
-        );
-
-        player.sendMessage(ColorUtil.text(message));
+            player.sendMessage(ColorUtil.text(
+                    message
+                            .replace("{player}", player.getName())
+                            .replace(
+                                    "{balance}",
+                                    String.valueOf(
+                                            plugin.getGemsManager().getBalance(
+                                                    player.getUniqueId()
+                                            )
+                                    )
+                            )
+            ));
+        }
     }
 }
