@@ -31,7 +31,7 @@ public final class GemsCommand implements CommandExecutor, TabCompleter {
             String[] args
     ) {
         if (!(sender instanceof Player player)) {
-            sender.sendMessage("This command can only be used by players.");
+            sender.sendMessage("This command can only be used in-game.");
             return true;
         }
 
@@ -41,17 +41,50 @@ public final class GemsCommand implements CommandExecutor, TabCompleter {
         }
 
         switch (args[0].toLowerCase(Locale.ROOT)) {
+            case "edit" -> {
+                if (!hasAdminPermission(player)) {
+                    player.sendMessage(ColorUtil.text(
+                            "<red>You don't have permission to edit VortexGems."
+                    ));
+                    return true;
+                }
+
+                plugin.getMenuManager().openAdmin(player);
+            }
+
             case "balance", "bal" -> showBalance(player, args);
+
             case "pay", "transfer" -> transfer(player, args);
-            case "shop", "store" -> plugin.getMenuManager().openCategories(player);
-            case "buy" -> plugin.getMenuManager().openBuy(player);
+
+            case "shop", "store" ->
+                    plugin.getMenuManager().openCategories(player);
+
+            case "buy" ->
+                    plugin.getMenuManager().openBuy(player);
+
             case "help" -> sendHelp(player);
+
             default -> player.sendMessage(ColorUtil.text(
                     "<red>Unknown command. Use <white>/gems help"
             ));
         }
 
         return true;
+    }
+
+    private boolean hasAdminPermission(Player player) {
+        boolean opBypass = plugin.getConfig().getBoolean(
+                "settings.admin.op-bypass",
+                true
+        );
+
+        String permission = plugin.getConfig().getString(
+                "settings.admin.permission",
+                "vortexgems.admin"
+        );
+
+        return player.hasPermission(permission)
+                || (opBypass && player.isOp());
     }
 
     private void showBalance(Player player, String[] args) {
@@ -144,17 +177,11 @@ public final class GemsCommand implements CommandExecutor, TabCompleter {
                 1000000
         );
 
-        if (amount < minimum) {
+        if (amount < minimum || amount > maximum) {
             player.sendMessage(ColorUtil.text(
-                    "<red>Minimum transfer amount: <white>" +
-                            ColorUtil.formatGems(minimum)
-            ));
-            return;
-        }
-
-        if (amount > maximum) {
-            player.sendMessage(ColorUtil.text(
-                    "<red>Maximum transfer amount: <white>" +
+                    "<red>Transfer amount must be between <white>" +
+                            ColorUtil.formatGems(minimum) +
+                            " <red>and <white>" +
                             ColorUtil.formatGems(maximum)
             ));
             return;
@@ -209,6 +236,9 @@ public final class GemsCommand implements CommandExecutor, TabCompleter {
                 "<yellow>/gems <gray>- Open Gems menu"
         ));
         player.sendMessage(ColorUtil.text(
+                "<yellow>/gems edit <gray>- Open admin editor"
+        ));
+        player.sendMessage(ColorUtil.text(
                 "<yellow>/gems balance [player] <gray>- Check balance"
         ));
         player.sendMessage(ColorUtil.text(
@@ -221,9 +251,8 @@ public final class GemsCommand implements CommandExecutor, TabCompleter {
                 "<yellow>/gems buy <gray>- Buy Gems"
         ));
         player.sendMessage(ColorUtil.text(
-                "<yellow>/gems help <gray>- Show commands"
+                "<dark_gray>━━━━━━━━━━━━━━━━━━━━"
         ));
-        player.sendMessage(ColorUtil.text("<dark_gray>━━━━━━━━━━━━━━━━━━━━"));
     }
 
     @Override
@@ -237,6 +266,7 @@ public final class GemsCommand implements CommandExecutor, TabCompleter {
 
         if (args.length == 1) {
             suggestions.addAll(List.of(
+                    "edit",
                     "balance",
                     "bal",
                     "pay",
@@ -247,16 +277,14 @@ public final class GemsCommand implements CommandExecutor, TabCompleter {
                     "help"
             ));
         } else if (args.length == 2 &&
-                (args[0].equalsIgnoreCase("pay")
-                        || args[0].equalsIgnoreCase("transfer")
-                        || args[0].equalsIgnoreCase("balance")
-                        || args[0].equalsIgnoreCase("bal"))) {
+                List.of("pay", "transfer", "balance", "bal")
+                        .contains(args[0].toLowerCase(Locale.ROOT))) {
             for (Player online : Bukkit.getOnlinePlayers()) {
                 suggestions.add(online.getName());
             }
         } else if (args.length == 3 &&
-                (args[0].equalsIgnoreCase("pay")
-                        || args[0].equalsIgnoreCase("transfer"))) {
+                List.of("pay", "transfer")
+                        .contains(args[0].toLowerCase(Locale.ROOT))) {
             suggestions.addAll(List.of("100", "500", "1000"));
         }
 
