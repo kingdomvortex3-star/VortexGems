@@ -58,12 +58,35 @@ public final class ItemUtil {
         return create(material, name, List.of());
     }
 
+    public static ItemStack named(ItemStack item, String name) {
+        if (item == null || item.getType().isAir()) {
+            return new ItemStack(Material.BARRIER);
+        }
+
+        ItemStack result = item.clone();
+        setName(result, name);
+        return result;
+    }
+
     public static ItemStack withLore(
             Material material,
             String name,
             String... lore
     ) {
         return create(material, name, List.of(lore));
+    }
+
+    public static ItemStack withLore(
+            ItemStack item,
+            List<String> lore
+    ) {
+        if (item == null || item.getType().isAir()) {
+            return new ItemStack(Material.BARRIER);
+        }
+
+        ItemStack result = item.clone();
+        setLore(result, lore);
+        return result;
     }
 
     public static ItemStack filler() {
