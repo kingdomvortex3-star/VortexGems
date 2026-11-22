@@ -1,0 +1,68 @@
+settings:
+  prefix: "<gradient:#00E5FF:#7B61FF><bold>VORTEX GEMS</bold></gradient> <dark_gray>»</dark_gray>"
+
+  admin:
+    op-bypass: true
+    permission: vortexgems.admin
+
+  economy:
+    enabled: true
+    buying-enabled: true
+    price-per-gem: 1000.0
+    minimum-purchase: 1
+    maximum-purchase: 100000
+
+  transfer:
+    enabled: true
+    minimum: 1
+    maximum: 1000000
+    tax-percent: 0.0
+
+  leaderboard:
+    enabled: true
+    limit: 10
+
+  database:
+    file: data.db
+
+gui:
+  main:
+    title: "<gradient:#00E5FF:#7B61FF><bold>VORTEX GEMS</bold></gradient>"
+    size: 45
+    balance-slot: 4
+    buy-slot: 20
+    shop-slot: 22
+    leaderboard-slot: 24
+    close-slot: 40
+
+  buy:
+    title: "<dark_gray>Buy Gems"
+    size: 45
+
+  category:
+    title: "<dark_gray>Gems Shop"
+    size: 54
+
+  reward:
+    title: "<dark_gray>{category}"
+    size: 54
+
+  confirm:
+    title: "<dark_gray>Confirm Purchase"
+    size: 27
+
+  admin:
+    title: "<dark_red><bold>GEMS ADMIN</bold>"
+    size: 45
+
+  category-editor:
+    title: "<dark_gray>Category Editor"
+    size: 54
+
+  reward-editor:
+    title: "<dark_gray>Reward Editor"
+    size: 54
+
+  settings:
+    title: "<dark_gray>Gems Settings"
+    size: 45
