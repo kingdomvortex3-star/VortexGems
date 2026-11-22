@@ -32,12 +32,12 @@ public final class RewardEditorMenu {
         holder.setInventory(inventory);
         fill(inventory);
 
-        int slot = 10;
+        // Category harus ditempatkan pada slot yang sama
+        // dengan indeks yang diperiksa MenuListener.
+        int slot = 0;
 
-        for (String categoryId :
-                plugin.getCategoryManager().getCategoryIds()) {
-
-            if (slot >= 44) {
+        for (String categoryId : plugin.getCategoryManager().getCategoryIds()) {
+            if (slot >= 45) {
                 break;
             }
 
@@ -51,11 +51,11 @@ public final class RewardEditorMenu {
             String name =
                     plugin.getCategoryManager().getName(categoryId);
 
-            inventory.setItem(slot, ItemUtil.create(
+            inventory.setItem(slot++, ItemUtil.create(
                     material,
                     1,
-                    "<gradient:#55ff55:#00aaaa><bold>" +
-                            name + "</bold></gradient>",
+                    "<gradient:#55ff55:#00aaaa><bold>"
+                            + name + "</bold></gradient>",
                     List.of(
                             "",
                             "<gray>ɪᴅ: <white>" + categoryId,
@@ -64,29 +64,37 @@ public final class RewardEditorMenu {
                             "<yellow>ᴄʟɪᴄᴋ ᴛᴏ ᴏᴘᴇɴ"
                     )
             ));
-
-            slot++;
-            if (slot % 9 == 8) {
-                slot += 2;
-            }
         }
 
         inventory.setItem(49, ItemUtil.create(
                 Material.ARROW,
                 1,
                 "<yellow><bold>ʙᴀᴄᴋ</bold>",
-                List.of("", "<gray>ʀᴇᴛᴜʀɴ ᴛᴏ ᴀᴅᴍɪɴ ᴍᴇɴᴜ")
+                List.of(
+                        "",
+                        "<gray>ʀᴇᴛᴜʀɴ ᴛᴏ ᴀᴅᴍɪɴ ᴍᴇɴᴜ"
+                )
         ));
 
         player.openInventory(inventory);
     }
 
     public void openCategory(Player player, String categoryId) {
+        if (!plugin.getCategoryManager().exists(categoryId)) {
+            player.sendMessage(ColorUtil.text(
+                    "<red>Category not found."
+            ));
+            open(player);
+            return;
+        }
+
         String categoryName =
                 plugin.getCategoryManager().getName(categoryId);
 
+        // Penting: gunakan REWARD_CATEGORY agar MenuListener
+        // memanggil handleRewardCategory(), bukan handleRewardEditor().
         MenuHolder holder = new MenuHolder(
-                "REWARD_EDITOR",
+                "REWARD_CATEGORY",
                 categoryId
         );
 
@@ -101,13 +109,24 @@ public final class RewardEditorMenu {
         holder.setInventory(inventory);
         fill(inventory);
 
-        int slot = 10;
+        for (String rewardId : plugin.getRewardManager().getRewardIds()) {
 
-        for (String rewardId :
-                plugin.getRewardManager().getRewardsInCategory(categoryId)) {
+            if (!plugin.getRewardManager()
+                    .getCategory(rewardId)
+                    .equalsIgnoreCase(categoryId)) {
+                continue;
+            }
 
-            if (slot >= 44) {
-                break;
+            int rewardSlot =
+                    plugin.getRewardManager().getSlot(rewardId);
+
+            // Slot 45 = ADD REWARD
+            // Slot 49 = BACK
+            if (rewardSlot < 0
+                    || rewardSlot >= inventory.getSize()
+                    || rewardSlot == 45
+                    || rewardSlot == 49) {
+                continue;
             }
 
             ItemStack item =
@@ -143,8 +162,8 @@ public final class RewardEditorMenu {
 
             item = ItemUtil.named(
                     item,
-                    "<gradient:#55ff55:#00aaaa><bold>" +
-                            rewardName + "</bold></gradient>"
+                    "<gradient:#55ff55:#00aaaa><bold>"
+                            + rewardName + "</bold></gradient>"
             );
 
             item = ItemUtil.withLore(
@@ -152,25 +171,19 @@ public final class RewardEditorMenu {
                     List.of(
                             "",
                             "<gray>ɪᴅ: <white>" + rewardId,
-                            "<gray>ᴘʀɪᴄᴇ: <aqua>" +
-                                    ColorUtil.formatGems(price) + " ɢᴇᴍѕ",
-                            "<gray>ѕᴛᴀᴛᴜѕ: " +
-                                    (enabled
-                                            ? "<green>ᴇɴᴀʙʟᴇᴅ"
-                                            : "<red>ᴅɪѕᴀʙʟᴇᴅ"),
+                            "<gray>ᴘʀɪᴄᴇ: <aqua>"
+                                    + ColorUtil.formatGems(price) + " ɢᴇᴍѕ",
+                            "<gray>ѕᴛᴀᴛᴜѕ: "
+                                    + (enabled
+                                    ? "<green>ᴇɴᴀʙʟᴇᴅ"
+                                    : "<red>ᴅɪѕᴀʙʟᴇᴅ"),
                             "",
-                            "<yellow>ʀɪɢʜᴛ ᴄʟɪᴄᴋ ᴛᴏ ᴇᴅɪᴛ",
-                            "<gray>ᴍɪᴅᴅʟᴇ ᴄʟɪᴄᴋ ᴛᴏ ᴛᴏɢɢʟᴇ",
-                            "<red>ѕʜɪꜰᴛ + ʀɪɢʜᴛ ᴄʟɪᴄᴋ ᴛᴏ ᴅᴇʟᴇᴛᴇ"
+                            "<yellow>ʀɪɢʜᴛ ᴄʟɪᴄᴋ ᴛᴏ ᴅᴇʟᴇᴛᴇ",
+                            "<gray>ᴍɪᴅᴅʟᴇ ᴄʟɪᴄᴋ ᴛᴏ ᴛᴏɢɢʟᴇ"
                     )
             );
 
-            inventory.setItem(slot, item);
-
-            slot++;
-            if (slot % 9 == 8) {
-                slot += 2;
-            }
+            inventory.setItem(rewardSlot, item);
         }
 
         inventory.setItem(45, ItemUtil.create(
