@@ -6,46 +6,36 @@ import my.kingdomvortex.vortexgems.util.ColorUtil;
 import my.kingdomvortex.vortexgems.util.ItemUtil;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
-import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public final class RewardMenu {
 
     private final VortexGems plugin;
-    private final String category;
 
-    public RewardMenu(VortexGems plugin, String category) {
+    public RewardMenu(VortexGems plugin) {
         this.plugin = plugin;
-        this.category = category;
     }
 
-    public void open(Player player) {
-        FileConfiguration config = plugin.getConfig();
-
-        int size = config.getInt("gui.reward.size", 54);
+    public void open(Player player, String categoryId) {
+        int size = plugin.getConfig().getInt("gui.reward.size", 54);
 
         if (size < 9 || size > 54 || size % 9 != 0) {
             size = 54;
         }
 
-        String categoryName = plugin.getCategoryManager().getName(category);
+        String categoryName = plugin.getCategoryManager().getName(categoryId);
 
-        MenuHolder holder = new MenuHolder("REWARD", category);
+        MenuHolder holder = new MenuHolder("REWARD", categoryId);
 
         Inventory inventory = Bukkit.createInventory(
                 holder,
                 size,
                 ColorUtil.text(
-                        config.getString(
-                                "gui.reward.title",
-                                "<dark_gray>{category}"
-                        ).replace("{category}", categoryName)
+                        "<dark_gray>ʀᴇᴡᴀʀᴅѕ | " + categoryName
                 )
         );
 
@@ -55,76 +45,78 @@ public final class RewardMenu {
             inventory.setItem(slot, ItemUtil.filler());
         }
 
-        for (String id : plugin.getRewardManager()
-                .getRewardsInCategory(category)) {
+        for (String rewardId :
+                plugin.getRewardManager().getRewardsInCategory(categoryId)) {
 
-            int slot = plugin.getRewardManager().getSlot(id);
+            if (!plugin.getRewardManager().isEnabled(rewardId)) {
+                continue;
+            }
+
+            int slot = plugin.getRewardManager().getSlot(rewardId);
 
             if (slot < 0 || slot >= size || slot == size - 5) {
                 continue;
             }
 
-            ItemStack reward = plugin.getRewardManager().getItemStack(id);
+            ItemStack rewardItem =
+                    plugin.getRewardManager().getItemStack(rewardId);
 
-            if (reward == null || reward.getType().isAir()) {
-                Material material = plugin.getRewardManager().getMaterial(id);
+            if (rewardItem == null || rewardItem.getType().isAir()) {
+                Material material =
+                        plugin.getRewardManager().getMaterial(rewardId);
 
                 if (material == null || material.isAir()) {
-                    continue;
+                    material = Material.CHEST;
                 }
 
-                reward = new ItemStack(
+                rewardItem = new ItemStack(
                         material,
-                        plugin.getRewardManager().getAmount(id)
+                        Math.max(1, plugin.getRewardManager().getAmount(rewardId))
                 );
             } else {
-                reward = reward.clone();
+                rewardItem = rewardItem.clone();
             }
 
-            ItemMeta meta = reward.getItemMeta();
+            String rewardName =
+                    plugin.getRewardManager().getName(rewardId);
 
-            if (meta != null) {
-                List<net.kyori.adventure.text.Component> lore =
-                        new ArrayList<>();
+            long price =
+                    plugin.getRewardManager().getPrice(rewardId);
 
-                if (meta.lore() != null) {
-                    lore.addAll(meta.lore());
-                }
+            List<String> lore =
+                    plugin.getRewardManager().getLore(rewardId);
 
-                lore.add(ColorUtil.text(""));
-                lore.add(ColorUtil.text(
-                        "<dark_gray>━━━━━━━━━━━━━━━━"
-                ));
-                lore.add(ColorUtil.text(
-                        "<gray>Price: <aqua><bold>" +
-                                ColorUtil.formatGems(
-                                        plugin.getRewardManager().getPrice(id)
-                                )
-                ));
-                lore.add(ColorUtil.text(
-                        "<yellow>Click to purchase"
-                ));
+            ItemStack display = ItemUtil.named(
+                    rewardItem,
+                    "<gradient:#55ff55:#00aaaa><bold>" +
+                            rewardName + "</bold></gradient>"
+            );
 
-                meta.lore(lore);
+            display = ItemUtil.withLore(
+                    display,
+                    lore == null || lore.isEmpty()
+                            ? List.of(
+                                    "",
+                                    "<gray>ᴘʀɪᴄᴇ: <aqua>" +
+                                            ColorUtil.formatGems(price) + " ɢᴇᴍѕ",
+                                    "",
+                                    "<yellow>ᴄʟɪᴄᴋ ᴛᴏ ᴘᴜʀᴄʜᴀѕᴇ"
+                            )
+                            : lore
+            );
 
-                reward.setItemMeta(meta);
-            }
-
-            inventory.setItem(slot, reward);
+            inventory.setItem(slot, display);
         }
 
-        inventory.setItem(
-                size - 5,
-                ItemUtil.create(
-                        Material.ARROW,
-                        1,
-                        "<yellow><bold>BACK</bold>",
-                        List.of(
-                                "",
-                                "<gray>Return to categories."
-                        )
+        inventory.setItem(size - 5, ItemUtil.create(
+                Material.ARROW,
+                1,
+                "<yellow><bold>ʙᴀᴄᴋ</bold>",
+                List.of(
+                        "",
+                        "<gray>ʀᴇᴛᴜʀɴ ᴛᴏ ᴄᴀᴛᴇɢᴏʀɪᴇѕ"
                 )
-        );
+        ));
 
         player.openInventory(inventory);
     }
