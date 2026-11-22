@@ -1,3 +1,4 @@
+
 package my.kingdomvortex.vortexgems;
 
 import my.kingdomvortex.vortexgems.command.GemsAdminCommand;
@@ -35,7 +36,14 @@ public final class VortexGems extends JavaPlugin {
     public void onEnable() {
         getLogger().info("Starting VortexGems...");
 
+        if (!getDataFolder().exists() && !getDataFolder().mkdirs()) {
+            getLogger().severe("Could not create plugin data folder.");
+            getServer().getPluginManager().disablePlugin(this);
+            return;
+        }
+
         saveDefaultConfig();
+
         saveResourceIfMissing("categories.yml");
         saveResourceIfMissing("rewards.yml");
         saveResourceIfMissing("messages.yml");
@@ -52,6 +60,8 @@ public final class VortexGems extends JavaPlugin {
         }
 
         economyManager = new EconomyManager(this);
+        economyManager.setup();
+
         gemsManager = new GemsManager(this);
         categoryManager = new CategoryManager(this);
         rewardManager = new RewardManager(this);
@@ -67,16 +77,6 @@ public final class VortexGems extends JavaPlugin {
         getLogger().info("VortexGems enabled successfully.");
     }
 
-    private void saveResourceIfMissing(String fileName) {
-        if (!getDataFolder().exists()) {
-            getDataFolder().mkdirs();
-        }
-
-        if (!new java.io.File(getDataFolder(), fileName).exists()) {
-            saveResource(fileName, false);
-        }
-    }
-
     @Override
     public void onDisable() {
         if (databaseManager != null) {
@@ -86,42 +86,58 @@ public final class VortexGems extends JavaPlugin {
         getLogger().info("VortexGems disabled.");
     }
 
-    private void registerCommands() {
-        PluginCommand gems = getCommand("gems");
+    private void saveResourceIfMissing(String fileName) {
+        java.io.File file = new java.io.File(getDataFolder(), fileName);
 
-        if (gems != null) {
+        if (!file.exists()) {
+            saveResource(fileName, false);
+        }
+    }
+
+    private void registerCommands() {
+        PluginCommand gemsCommand = getCommand("gems");
+
+        if (gemsCommand != null) {
             GemsCommand executor = new GemsCommand(this);
-            gems.setExecutor(executor);
-            gems.setTabCompleter(executor);
+            gemsCommand.setExecutor(executor);
+            gemsCommand.setTabCompleter(executor);
         } else {
-            getLogger().severe("Command gems is missing from plugin.yml!");
+            getLogger().severe("Command 'gems' is missing from plugin.yml.");
         }
 
-        PluginCommand admin = getCommand("gemsadmin");
+        PluginCommand adminCommand = getCommand("gemsadmin");
 
-        if (admin != null) {
+        if (adminCommand != null) {
             GemsAdminCommand executor = new GemsAdminCommand(this);
-            admin.setExecutor(executor);
-            admin.setTabCompleter(executor);
+            adminCommand.setExecutor(executor);
+            adminCommand.setTabCompleter(executor);
         } else {
-            getLogger().severe("Command gemsadmin is missing from plugin.yml!");
+            getLogger().severe("Command 'gemsadmin' is missing from plugin.yml.");
         }
     }
 
     private void registerListeners() {
         getServer().getPluginManager().registerEvents(
-                new MenuListener(this), this
+                new MenuListener(this),
+                this
         );
 
         getServer().getPluginManager().registerEvents(
-                new PlayerListener(this), this
+                new PlayerListener(this),
+                this
         );
     }
 
     private void registerPlaceholder() {
-        if (getServer().getPluginManager().getPlugin("PlaceholderAPI") != null) {
-            new GemsExpansion(this).register();
+        if (getServer().getPluginManager().getPlugin("PlaceholderAPI") == null) {
+            getLogger().info("PlaceholderAPI not found. Expansion skipped.");
+            return;
+        }
+
+        if (new GemsExpansion(this).register()) {
             getLogger().info("PlaceholderAPI expansion registered.");
+        } else {
+            getLogger().warning("PlaceholderAPI expansion registration failed.");
         }
     }
 
@@ -129,7 +145,7 @@ public final class VortexGems extends JavaPlugin {
         reloadConfig();
 
         if (configManager != null) {
-            configManager.reload();
+            configManager.load();
         }
 
         if (categoryManager != null) {
@@ -140,7 +156,7 @@ public final class VortexGems extends JavaPlugin {
             rewardManager.reload();
         }
 
-        getLogger().info("Configuration reloaded.");
+        getLogger().info("VortexGems configuration reloaded.");
     }
 
     public ConfigManager getConfigManager() {
