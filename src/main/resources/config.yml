@@ -1,0 +1,70 @@
+settings:
+  prefix: "&8[&bVortexGems&8] &7"
+  currency-name: "Gems"
+  currency-symbol: "✦"
+
+  starting-balance: 0
+  decimal-support: false
+  max-balance: 1000000000
+
+economy:
+  enabled: true
+  buy-enabled: true
+
+  # Harga untuk 1 Gems.
+  # Bisa diganti kapan saja.
+  price-per-gem: 1500
+
+  min-purchase: 1
+  max-purchase: 10000
+
+  # Menu pembelian.
+  purchase-options:
+    - 1
+    - 5
+    - 10
+    - 25
+    - 50
+    - 100
+
+  confirm-purchase: true
+
+storage:
+  type: SQLITE
+  sqlite:
+    file: data.db
+
+leaderboard:
+  enabled: true
+  max-entries: 10
+  update-interval: 60
+
+shop:
+  enabled: true
+  confirm-purchase: true
+  close-after-purchase: false
+
+admin:
+  op-access: true
+  gui-editor: true
+  auto-save: true
+
+security:
+  prevent-negative-balance: true
+  prevent-duplicate-purchase: true
+  log-transactions: true
+  validate-rewards: true
+
+messages:
+  no-permission: "&cKamu tidak memiliki permission!"
+  player-only: "&cCommand ini hanya bisa digunakan player."
+  invalid-amount: "&cJumlah tidak valid."
+  player-not-found: "&cPlayer tidak ditemukan."
+  not-enough-money: "&cUang kamu tidak cukup!"
+  not-enough-gems: "&cGems kamu tidak cukup!"
+  purchase-success: "&aBerhasil membeli &b%amount% Gems&a!"
+  exchange-success: "&aBerhasil menukarkan &e%reward%&a!"
+  reload-success: "&aKonfigurasi berhasil dimuat ulang!"
+  give-success: "&aBerhasil memberikan &b%amount% Gems."
+  take-success: "&aBerhasil mengambil &b%amount% Gems."
+  set-success: "&aSaldo Gems berhasil diatur."
