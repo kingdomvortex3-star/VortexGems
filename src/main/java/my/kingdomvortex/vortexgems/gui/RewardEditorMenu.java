@@ -3,7 +3,6 @@ package my.kingdomvortex.vortexgems.gui;
 import my.kingdomvortex.vortexgems.VortexGems;
 import my.kingdomvortex.vortexgems.util.ColorUtil;
 import my.kingdomvortex.vortexgems.util.ItemUtil;
-import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -26,12 +25,12 @@ public final class RewardEditorMenu {
         Inventory inventory = Bukkit.createInventory(
                 holder,
                 54,
-                Component.text("VORTEX - REWARD MANAGER")
+                ColorUtil.text("<dark_gray>VORTEX - REWARD MANAGER")
         );
 
         holder.setInventory(inventory);
 
-        for (int slot = 0; slot < inventory.getSize(); slot++) {
+        for (int slot = 0; slot < 54; slot++) {
             inventory.setItem(slot, ItemUtil.filler());
         }
 
@@ -46,10 +45,10 @@ public final class RewardEditorMenu {
                 break;
             }
 
-            Material material = plugin.getRewardManager().getMaterial(id);
-            int amount = plugin.getRewardManager().getAmount(id);
             String name = plugin.getRewardManager().getName(id);
             String category = plugin.getRewardManager().getCategory(id);
+            Material material = plugin.getRewardManager().getMaterial(id);
+            int amount = plugin.getRewardManager().getAmount(id);
             long price = plugin.getRewardManager().getPrice(id);
             String type = plugin.getRewardManager().getType(id);
             boolean enabled = plugin.getRewardManager().isEnabled(id);
@@ -59,6 +58,7 @@ public final class RewardEditorMenu {
             lore.add("<gray>ID: <white>" + id);
             lore.add("<gray>Category: <white>" + category);
             lore.add("<gray>Type: <white>" + type);
+            lore.add("<gray>Amount: <white>" + amount);
             lore.add("<gray>Price: <aqua>" + ColorUtil.formatGems(price));
             lore.add("<gray>Status: " +
                     (enabled ? "<green>Enabled" : "<red>Disabled"));
