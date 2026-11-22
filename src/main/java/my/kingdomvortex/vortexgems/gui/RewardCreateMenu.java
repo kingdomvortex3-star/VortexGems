@@ -17,7 +17,8 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public final class RewardCreateMenu {
 
-    private static final Map<UUID, Long> PRICES = new ConcurrentHashMap<>();
+    private static final Map<UUID, Long> PRICES =
+            new ConcurrentHashMap<>();
 
     private final VortexGems plugin;
 
@@ -37,7 +38,7 @@ public final class RewardCreateMenu {
         Inventory inventory = Bukkit.createInventory(
                 holder,
                 27,
-                ColorUtil.text("<dark_gray>VORTEX - CREATE REWARD")
+                ColorUtil.text("<dark_gray>ᴄʀᴇᴀᴛᴇ ʀᴇᴡᴀʀᴅ")
         );
 
         holder.setInventory(inventory);
@@ -49,51 +50,47 @@ public final class RewardCreateMenu {
         inventory.setItem(13, ItemUtil.create(
                 Material.HOPPER,
                 1,
-                "<yellow><bold>REWARD ITEM</bold>",
+                "<yellow><bold>ʀᴇᴡᴀʀᴅ ɪᴛᴇᴍ</bold>",
                 List.of(
                         "",
-                        "<gray>Place the item you want to sell here.",
-                        "<gray>Its enchantments, name and lore",
-                        "<gray>will be saved.",
+                        "<gray>ᴘʟᴀᴄᴇ ᴛʜᴇ ɪᴛᴇᴍ ʏᴏᴜ ᴡᴀɴᴛ",
+                        "<gray>ᴛᴏ ѕᴇʟʟ ɪɴ ᴛʜɪѕ ѕʟᴏᴛ.",
                         "",
-                        "<yellow>Place an item in this slot."
+                        "<yellow>ᴅʀᴀɢ ɪᴛᴇᴍ ʜᴇʀᴇ"
                 )
         ));
 
         inventory.setItem(11, ItemUtil.create(
                 Material.GOLD_INGOT,
                 1,
-                "<gold><bold>SET GEMS PRICE</bold>",
+                "<gold><bold>ѕᴇᴛ ɢᴇᴍѕ ᴘʀɪᴄᴇ</bold>",
                 List.of(
                         "",
-                        "<gray>Current price: <aqua>" +
+                        "<gray>ᴄᴜʀʀᴇɴᴛ: <aqua>" +
                                 PRICES.getOrDefault(player.getUniqueId(), 0L) +
-                                " Gems",
+                                " ɢᴇᴍѕ",
                         "",
-                        "<yellow>Click to enter the price in chat."
+                        "<yellow>ᴄʟɪᴄᴋ ᴛᴏ ᴄʜᴀɴɢᴇ"
                 )
         ));
 
         inventory.setItem(15, ItemUtil.create(
                 Material.LIME_DYE,
                 1,
-                "<green><bold>SAVE REWARD</bold>",
+                "<green><bold>ѕᴀᴠᴇ ʀᴇᴡᴀʀᴅ</bold>",
                 List.of(
                         "",
-                        "<gray>Save this item to the selected category.",
+                        "<gray>ѕᴀᴠᴇ ᴛʜɪѕ ɪᴛᴇᴍ ᴛᴏ ᴄᴀᴛᴇɢᴏʀʏ.",
                         "",
-                        "<yellow>Click to save."
+                        "<yellow>ᴄʟɪᴄᴋ ᴛᴏ ѕᴀᴠᴇ"
                 )
         ));
 
         inventory.setItem(22, ItemUtil.create(
                 Material.BARRIER,
                 1,
-                "<red><bold>CANCEL</bold>",
-                List.of(
-                        "",
-                        "<gray>Cancel reward creation."
-                )
+                "<red><bold>ᴄᴀɴᴄᴇʟ</bold>",
+                List.of("", "<gray>ᴄᴀɴᴄᴇʟ ᴄʀᴇᴀᴛɪᴏɴ")
         ));
 
         player.openInventory(inventory);
@@ -107,7 +104,7 @@ public final class RewardCreateMenu {
                 price = Long.parseLong(input);
             } catch (NumberFormatException exception) {
                 player.sendMessage(ColorUtil.text(
-                        "<red>Invalid price. Enter a whole number."
+                        "<red>ᴘʀɪᴄᴇ ᴍᴜѕᴛ ʙᴇ ᴀ ᴡʜᴏʟᴇ ɴᴜᴍʙᴇʀ."
                 ));
                 open(player, category);
                 return;
@@ -115,7 +112,7 @@ public final class RewardCreateMenu {
 
             if (price < 0) {
                 player.sendMessage(ColorUtil.text(
-                        "<red>Price cannot be negative."
+                        "<red>ᴘʀɪᴄᴇ ᴄᴀɴɴᴏᴛ ʙᴇ ɴᴇɢᴀᴛɪᴠᴇ."
                 ));
                 open(player, category);
                 return;
@@ -124,7 +121,7 @@ public final class RewardCreateMenu {
             PRICES.put(player.getUniqueId(), price);
 
             player.sendMessage(ColorUtil.text(
-                    "<green>Reward price set to <aqua>" + price + " Gems<green>."
+                    "<green>ᴘʀɪᴄᴇ ѕᴇᴛ: <aqua>" + price + " ɢᴇᴍѕ"
             ));
 
             open(player, category);
@@ -138,7 +135,7 @@ public final class RewardCreateMenu {
                 || item.getType().isAir()
                 || item.getType() == Material.HOPPER) {
             player.sendMessage(ColorUtil.text(
-                    "<red>Place a valid reward item in the item slot first."
+                    "<red>ᴘʟᴀᴄᴇ ᴀ ᴠᴀʟɪᴅ ɪᴛᴇᴍ ꜰɪʀѕᴛ."
             ));
             return false;
         }
@@ -147,7 +144,17 @@ public final class RewardCreateMenu {
 
         if (price < 0) {
             player.sendMessage(ColorUtil.text(
-                    "<red>Please set the Gems price first."
+                    "<red>ѕᴇᴛ ᴛʜᴇ ɢᴇᴍѕ ᴘʀɪᴄᴇ ꜰɪʀѕᴛ."
+            ));
+            return false;
+        }
+
+        int freeSlot =
+                plugin.getRewardManager().getNextAvailableSlot(category);
+
+        if (freeSlot < 0) {
+            player.sendMessage(ColorUtil.text(
+                    "<red>ᴛʜɪѕ ᴄᴀᴛᴇɢᴏʀʏ ɪѕ ꜰᴜʟʟ."
             ));
             return false;
         }
@@ -162,19 +169,17 @@ public final class RewardCreateMenu {
             id = baseId + "_" + number++;
         }
 
-        ItemStack storedItem = item.clone();
-
         boolean created = plugin.getRewardManager().createItemReward(
                 id,
                 category,
-                storedItem,
+                item.clone(),
                 price,
-                0
+                freeSlot
         );
 
         if (!created) {
             player.sendMessage(ColorUtil.text(
-                    "<red>Failed to save this reward."
+                    "<red>ꜰᴀɪʟᴇᴅ ᴛᴏ ѕᴀᴠᴇ ʀᴇᴡᴀʀᴅ."
             ));
             return false;
         }
@@ -182,9 +187,8 @@ public final class RewardCreateMenu {
         PRICES.remove(player.getUniqueId());
 
         player.sendMessage(ColorUtil.text(
-                "<green>Reward <white>" + id +
-                        " <green>saved successfully for <aqua>" +
-                        price + " Gems<green>."
+                "<green>ʀᴇᴡᴀʀᴅ ѕᴀᴠᴇᴅ: <white>" + id
+                        + " <gray>| <aqua>" + price + " ɢᴇᴍѕ"
         ));
 
         return true;
