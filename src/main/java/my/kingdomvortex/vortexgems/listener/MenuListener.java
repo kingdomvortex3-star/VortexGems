@@ -59,9 +59,11 @@ public final class MenuListener implements Listener {
             case "REWARD" -> handleReward(player, slot, top, holder);
             case "CONFIRM" -> handleConfirm(player, slot, holder);
             case "ADMIN" -> handleAdmin(player, slot);
-            case "CATEGORY_EDITOR" -> handleCategoryEditor(player, slot, event.getClick());
+            case "CATEGORY_EDITOR" ->
+                    handleCategoryEditor(player, slot, event.getClick());
             case "REWARD_EDITOR" -> handleRewardEditor(player, slot);
-            case "REWARD_CATEGORY" -> handleRewardCategory(player, slot, event.getClick(), holder);
+            case "REWARD_CATEGORY" ->
+                    handleRewardCategory(player, slot, event.getClick(), holder);
             case "SETTINGS" -> handleSettings(player, slot);
             default -> player.closeInventory();
         }
@@ -147,8 +149,10 @@ public final class MenuListener implements Listener {
     private void handleMain(Player player, int slot) {
         if (slot == plugin.getConfig().getInt("gui.main.buy-slot", 20)) {
             plugin.getMenuManager().openBuy(player);
+
         } else if (slot == plugin.getConfig().getInt("gui.main.shop-slot", 22)) {
             plugin.getMenuManager().openCategories(player);
+
         } else if (slot == plugin.getConfig().getInt("gui.main.close-slot", 40)) {
             player.closeInventory();
         }
@@ -181,8 +185,9 @@ public final class MenuListener implements Listener {
         }
 
         player.sendMessage(ColorUtil.text(
-                "<green>You purchased <aqua>" +
-                        ColorUtil.formatGems(amount) + " Gems<green>."
+                "<green>You purchased <aqua>"
+                        + ColorUtil.formatGems(amount)
+                        + " Gems<green>."
         ));
 
         plugin.getMenuManager().openBuy(player);
@@ -219,7 +224,9 @@ public final class MenuListener implements Listener {
             return;
         }
 
-        for (String id : plugin.getRewardManager().getRewardsInCategory(category)) {
+        for (String id :
+                plugin.getRewardManager().getRewardsInCategory(category)) {
+
             if (plugin.getRewardManager().getSlot(id) == slot) {
                 plugin.getMenuManager().openConfirm(player, id);
                 return;
@@ -230,7 +237,8 @@ public final class MenuListener implements Listener {
     private void handleConfirm(Player player, int slot, MenuHolder holder) {
         String rewardId = holder.getData();
 
-        if (rewardId == null || !plugin.getRewardManager().exists(rewardId)) {
+        if (rewardId == null
+                || !plugin.getRewardManager().exists(rewardId)) {
             player.closeInventory();
             return;
         }
@@ -243,7 +251,8 @@ public final class MenuListener implements Listener {
             return;
         }
 
-        if (slot != 11 || !plugin.getRewardManager().isEnabled(rewardId)) {
+        if (slot != 11
+                || !plugin.getRewardManager().isEnabled(rewardId)) {
             return;
         }
 
@@ -251,12 +260,15 @@ public final class MenuListener implements Listener {
         String type = plugin.getRewardManager().getType(rewardId);
 
         if (price < 0) {
-            player.sendMessage(ColorUtil.text("<red>Invalid reward price."));
+            player.sendMessage(ColorUtil.text(
+                    "<red>Invalid reward price."
+            ));
             return;
         }
 
         if ("ITEM".equalsIgnoreCase(type)) {
-            ItemStack reward = plugin.getRewardManager().getItemStack(rewardId);
+            ItemStack reward =
+                    plugin.getRewardManager().getItemStack(rewardId);
 
             if (reward == null || !canFit(player, reward)) {
                 player.sendMessage(ColorUtil.text(
@@ -268,24 +280,31 @@ public final class MenuListener implements Listener {
             if (price > 0 && !plugin.getGemsManager().removeBalance(
                     player.getUniqueId(), price
             )) {
-                player.sendMessage(ColorUtil.text("<red>You don't have enough Gems."));
+                player.sendMessage(ColorUtil.text(
+                        "<red>You don't have enough Gems."
+                ));
                 return;
             }
 
             player.getInventory().addItem(reward);
 
         } else if ("COMMAND".equalsIgnoreCase(type)) {
-            List<String> commands = plugin.getRewardManager().getCommands(rewardId);
+            List<String> commands =
+                    plugin.getRewardManager().getCommands(rewardId);
 
             if (commands == null || commands.isEmpty()) {
-                player.sendMessage(ColorUtil.text("<red>No reward commands configured."));
+                player.sendMessage(ColorUtil.text(
+                        "<red>No reward commands configured."
+                ));
                 return;
             }
 
             if (price > 0 && !plugin.getGemsManager().removeBalance(
                     player.getUniqueId(), price
             )) {
-                player.sendMessage(ColorUtil.text("<red>You don't have enough Gems."));
+                player.sendMessage(ColorUtil.text(
+                        "<red>You don't have enough Gems."
+                ));
                 return;
             }
 
@@ -293,12 +312,17 @@ public final class MenuListener implements Listener {
                 Bukkit.dispatchCommand(
                         Bukkit.getConsoleSender(),
                         command.replace("{player}", player.getName())
-                                .replace("{uuid}", player.getUniqueId().toString())
+                                .replace(
+                                        "{uuid}",
+                                        player.getUniqueId().toString()
+                                )
                 );
             }
 
         } else {
-            player.sendMessage(ColorUtil.text("<red>Unsupported reward type."));
+            player.sendMessage(ColorUtil.text(
+                    "<red>Unsupported reward type."
+            ));
             return;
         }
 
@@ -311,16 +335,22 @@ public final class MenuListener implements Listener {
             );
         }
 
-        player.sendMessage(ColorUtil.text("<green>Reward purchased successfully!"));
+        player.sendMessage(ColorUtil.text(
+                "<green>Reward purchased successfully!"
+        ));
+
         player.closeInventory();
     }
 
     private boolean canFit(Player player, ItemStack item) {
         int remaining = item.getAmount();
 
-        for (ItemStack content : player.getInventory().getStorageContents()) {
+        for (ItemStack content :
+                player.getInventory().getStorageContents()) {
+
             if (content == null || content.getType().isAir()) {
                 remaining -= item.getMaxStackSize();
+
             } else if (content.isSimilar(item)) {
                 remaining -= Math.max(
                         0,
@@ -358,15 +388,24 @@ public final class MenuListener implements Listener {
             case 11 -> plugin.getMenuManager().openCategoryEditor(player);
             case 13 -> plugin.getMenuManager().openRewardEditor(player);
             case 15 -> plugin.getMenuManager().openSettings(player);
+
             case 31 -> {
                 plugin.reloadPlugin();
-                player.sendMessage(ColorUtil.text("<green>VortexGems reloaded."));
+
+                player.sendMessage(ColorUtil.text(
+                        "<green>VortexGems reloaded."
+                ));
+
                 plugin.getMenuManager().openAdmin(player);
             }
         }
     }
 
-    private void handleCategoryEditor(Player player, int slot, ClickType click) {
+    private void handleCategoryEditor(
+            Player player,
+            int slot,
+            ClickType click
+    ) {
         if (!isAdmin(player)) {
             player.closeInventory();
             return;
@@ -377,11 +416,123 @@ public final class MenuListener implements Listener {
             return;
         }
 
+        // CREATE CATEGORY
         if (slot == 45) {
             player.closeInventory();
+
             player.sendMessage(ColorUtil.text(
-                    "<yellow>Category creation is available through /gemsadmin category create."
+                    "<gold><bold>CREATE CATEGORY"
             ));
+
+            player.sendMessage(ColorUtil.text(
+                    "<yellow>Ketik nama kategori yang ingin dibuat."
+            ));
+
+            player.sendMessage(ColorUtil.text(
+                    "<gray>Contoh: <white>wakwau"
+            ));
+
+            player.sendMessage(ColorUtil.text(
+                    "<gray>Ketik <red>cancel <gray>untuk membatalkan."
+            ));
+
+            plugin.getInputManager().request(player, input -> {
+                if (!isAdmin(player)) {
+                    return;
+                }
+
+                String name = input.trim();
+
+                if (name.equalsIgnoreCase("cancel")) {
+                    player.sendMessage(ColorUtil.text(
+                            "<red>Pembuatan kategori dibatalkan."
+                    ));
+
+                    plugin.getMenuManager().openCategoryEditor(player);
+                    return;
+                }
+
+                if (name.isBlank()) {
+                    player.sendMessage(ColorUtil.text(
+                            "<red>Nama kategori tidak boleh kosong."
+                    ));
+
+                    plugin.getMenuManager().openCategoryEditor(player);
+                    return;
+                }
+
+                String id = name.toLowerCase()
+                        .replaceAll("[^a-z0-9_-]+", "_")
+                        .replaceAll("^_+|_+$", "");
+
+                if (id.isBlank()) {
+                    player.sendMessage(ColorUtil.text(
+                            "<red>Nama kategori tidak valid."
+                    ));
+
+                    plugin.getMenuManager().openCategoryEditor(player);
+                    return;
+                }
+
+                if (plugin.getCategoryManager().exists(id)) {
+                    player.sendMessage(ColorUtil.text(
+                            "<red>Kategori tersebut sudah tersedia."
+                    ));
+
+                    plugin.getMenuManager().openCategoryEditor(player);
+                    return;
+                }
+
+                int freeSlot = -1;
+
+                for (int i = 0; i < 45; i++) {
+                    boolean occupied = false;
+
+                    for (String category :
+                            plugin.getCategoryManager().getCategoryIds()) {
+
+                        if (plugin.getCategoryManager().getSlot(category) == i) {
+                            occupied = true;
+                            break;
+                        }
+                    }
+
+                    if (!occupied) {
+                        freeSlot = i;
+                        break;
+                    }
+                }
+
+                if (freeSlot == -1) {
+                    player.sendMessage(ColorUtil.text(
+                            "<red>Semua slot kategori sudah penuh."
+                    ));
+
+                    plugin.getMenuManager().openCategoryEditor(player);
+                    return;
+                }
+
+                boolean created = plugin.getCategoryManager().create(
+                        id,
+                        name,
+                        Material.CHEST,
+                        freeSlot
+                );
+
+                if (created) {
+                    player.sendMessage(ColorUtil.text(
+                            "<green>Kategori <aqua>" + name
+                                    + " <green>berhasil dibuat!"
+                    ));
+                } else {
+                    player.sendMessage(ColorUtil.text(
+                            "<red>Gagal membuat kategori."
+                    ));
+                }
+
+                plugin.getMenuManager().openCategoryEditor(player);
+            });
+
             return;
         }
 
@@ -394,8 +545,11 @@ public final class MenuListener implements Listener {
 
             if (click == ClickType.RIGHT) {
                 plugin.getCategoryManager().delete(id);
+
             } else {
-                boolean enabled = plugin.getCategoryManager().isEnabled(id);
+                boolean enabled =
+                        plugin.getCategoryManager().isEnabled(id);
+
                 plugin.getCategoryManager().setEnabled(id, !enabled);
             }
 
@@ -417,7 +571,9 @@ public final class MenuListener implements Listener {
 
         int index = 0;
 
-        for (String category : plugin.getCategoryManager().getCategoryIds()) {
+        for (String category :
+                plugin.getCategoryManager().getCategoryIds()) {
+
             if (index++ == slot) {
                 plugin.getMenuManager().openRewardCategory(player, category);
                 return;
@@ -471,12 +627,17 @@ public final class MenuListener implements Listener {
 
             if (click == ClickType.RIGHT) {
                 plugin.getRewardManager().delete(id);
+
                 player.sendMessage(ColorUtil.text(
                         "<green>Reward deleted: <white>" + id
                 ));
+
             } else {
-                boolean enabled = plugin.getRewardManager().isEnabled(id);
+                boolean enabled =
+                        plugin.getRewardManager().isEnabled(id);
+
                 plugin.getRewardManager().setEnabled(id, !enabled);
+
                 player.sendMessage(ColorUtil.text(
                         "<green>Reward status updated."
                 ));
@@ -526,9 +687,11 @@ public final class MenuListener implements Listener {
 
             case 31 -> {
                 plugin.reloadPlugin();
+
                 player.sendMessage(ColorUtil.text(
                         "<green>VortexGems configuration reloaded."
                 ));
+
                 plugin.getMenuManager().openSettings(player);
             }
 
@@ -558,19 +721,34 @@ public final class MenuListener implements Listener {
                 "<yellow>Enter the new price in chat."
         ));
 
+        player.sendMessage(ColorUtil.text(
+                "<gray>Ketik <red>cancel <gray>untuk membatalkan."
+        ));
+
         plugin.getInputManager().request(player, input -> {
             if (!isAdmin(player)) {
+                return;
+            }
+
+            if (input.trim().equalsIgnoreCase("cancel")) {
+                player.sendMessage(ColorUtil.text(
+                        "<red>Perubahan harga dibatalkan."
+                ));
+
+                plugin.getMenuManager().openSettings(player);
                 return;
             }
 
             double price;
 
             try {
-                price = Double.parseDouble(input.replace(",", ""));
+                price = Double.parseDouble(input.replace(",", "").trim());
+
             } catch (NumberFormatException exception) {
                 player.sendMessage(ColorUtil.text(
                         "<red>Invalid price. Please enter a number."
                 ));
+
                 plugin.getMenuManager().openSettings(player);
                 return;
             }
@@ -579,12 +757,14 @@ public final class MenuListener implements Listener {
                 player.sendMessage(ColorUtil.text(
                         "<red>Price must be greater than zero."
                 ));
+
                 plugin.getMenuManager().openSettings(player);
                 return;
             }
 
             plugin.getConfig().set(
-                    "settings.economy.price-per-gem", price
+                    "settings.economy.price-per-gem",
+                    price
             );
 
             plugin.saveConfig();
@@ -605,15 +785,30 @@ public final class MenuListener implements Listener {
                 "<yellow>Enter the new leaderboard limit in chat."
         ));
 
+        player.sendMessage(ColorUtil.text(
+                "<gray>Ketik <red>cancel <gray>untuk membatalkan."
+        ));
+
         plugin.getInputManager().request(player, input -> {
+            if (!isAdmin(player)) {
+                return;
+            }
+
+            if (input.trim().equalsIgnoreCase("cancel")) {
+                plugin.getMenuManager().openSettings(player);
+                return;
+            }
+
             int limit;
 
             try {
-                limit = Integer.parseInt(input);
+                limit = Integer.parseInt(input.trim());
+
             } catch (NumberFormatException exception) {
                 player.sendMessage(ColorUtil.text(
                         "<red>Please enter a valid whole number."
                 ));
+
                 plugin.getMenuManager().openSettings(player);
                 return;
             }
@@ -622,11 +817,16 @@ public final class MenuListener implements Listener {
                 player.sendMessage(ColorUtil.text(
                         "<red>Limit must be between 1 and 100."
                 ));
+
                 plugin.getMenuManager().openSettings(player);
                 return;
             }
 
-            plugin.getConfig().set("settings.leaderboard.limit", limit);
+            plugin.getConfig().set(
+                    "settings.leaderboard.limit",
+                    limit
+            );
+
             plugin.saveConfig();
 
             player.sendMessage(ColorUtil.text(
