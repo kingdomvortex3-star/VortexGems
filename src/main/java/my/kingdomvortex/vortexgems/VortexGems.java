@@ -52,7 +52,7 @@ public final class VortexGems extends JavaPlugin {
         registerListeners();
         registerPlaceholder();
 
-        getLogger().info("VortexGems has been enabled successfully.");
+        getLogger().info("VortexGems enabled successfully.");
     }
 
     @Override
@@ -61,7 +61,7 @@ public final class VortexGems extends JavaPlugin {
             databaseManager.close();
         }
 
-        getLogger().info("VortexGems has been disabled.");
+        getLogger().info("VortexGems disabled.");
     }
 
     private void registerCommands() {
@@ -72,7 +72,7 @@ public final class VortexGems extends JavaPlugin {
             gems.setExecutor(executor);
             gems.setTabCompleter(executor);
         } else {
-            getLogger().severe("Command 'gems' is missing from plugin.yml!");
+            getLogger().severe("Command gems is missing from plugin.yml!");
         }
 
         PluginCommand admin = getCommand("gemsadmin");
@@ -82,7 +82,7 @@ public final class VortexGems extends JavaPlugin {
             admin.setExecutor(executor);
             admin.setTabCompleter(executor);
         } else {
-            getLogger().severe("Command 'gemsadmin' is missing from plugin.yml!");
+            getLogger().severe("Command gemsadmin is missing from plugin.yml!");
         }
     }
 
@@ -160,4 +160,4 @@ public final class VortexGems extends JavaPlugin {
     public InputManager getInputManager() {
         return inputManager;
     }
-    }
+}
