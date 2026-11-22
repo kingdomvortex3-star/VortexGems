@@ -1,0 +1,37 @@
+prefix: "&8[&bVortexGems&8] &7"
+
+no-permission: "&cKamu tidak memiliki permission!"
+
+player-only: "&cCommand ini hanya bisa digunakan oleh player."
+
+player-not-found: "&cPlayer tidak ditemukan."
+
+invalid-amount: "&cJumlah Gems tidak valid."
+
+not-enough-money: "&cUang kamu tidak cukup!"
+
+not-enough-gems: "&cGems kamu tidak cukup!"
+
+purchase-success: "&aBerhasil membeli &b%amount% Gems&a!"
+
+exchange-success: "&aBerhasil menukarkan Gems menjadi &e%reward%&a!"
+
+balance: "&7Saldo Gems kamu: &b%balance% ✦"
+
+admin-give: "&aBerhasil memberikan &b%amount% Gems &akepada &e%player%&a."
+
+admin-take: "&aBerhasil mengambil &b%amount% Gems &adari &e%player%&a."
+
+admin-set: "&aSaldo Gems &e%player% &adiubah menjadi &b%amount%&a."
+
+reload-success: "&aKonfigurasi VortexGems berhasil dimuat ulang!"
+
+category-created: "&aKategori berhasil dibuat!"
+
+category-deleted: "&aKategori berhasil dihapus!"
+
+reward-created: "&aHadiah berhasil dibuat!"
+
+reward-deleted: "&aHadiah berhasil dihapus!"
+
+config-saved: "&aKonfigurasi berhasil disimpan!"
