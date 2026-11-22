@@ -34,9 +34,7 @@ public final class RewardMenu {
         Inventory inventory = Bukkit.createInventory(
                 holder,
                 size,
-                ColorUtil.text(
-                        "<dark_gray>ʀᴇᴡᴀʀᴅѕ | " + categoryName
-                )
+                ColorUtil.text("<dark_gray>ʀᴇᴡᴀʀᴅѕ | " + categoryName)
         );
 
         holder.setInventory(inventory);
