@@ -26,16 +26,18 @@ public final class CategoryEditorMenu {
                 holder,
                 54,
                 ColorUtil.text(
-                        "<gradient:#00E5FF:#8A2BE2><bold>VORTEX CATEGORY MANAGER</bold></gradient>"
+                        "<gradient:#00D9FF:#9B5CFF><bold>ᴠᴏʀᴛᴇx ᴄᴀᴛᴇɢᴏʀʏ</bold></gradient>"
                 )
         );
 
         holder.setInventory(inventory);
 
+        // Background
         for (int slot = 0; slot < 54; slot++) {
             inventory.setItem(slot, ItemUtil.filler());
         }
 
+        // Categories
         int displaySlot = 0;
 
         for (String id : plugin.getCategoryManager().getCategoryIds()) {
@@ -47,64 +49,75 @@ public final class CategoryEditorMenu {
             int categorySlot = plugin.getCategoryManager().getSlot(id);
             boolean enabled = plugin.getCategoryManager().isEnabled(id);
 
+            Material icon = plugin.getCategoryManager().getMaterial(id);
+
+            if (icon == null || icon.isAir()) {
+                icon = Material.CHEST;
+            }
+
             inventory.setItem(displaySlot++, ItemUtil.create(
-                    plugin.getCategoryManager().getMaterial(id),
+                    icon,
                     plugin.getCategoryManager().getAmount(id),
-                    "<gradient:#55E7FF:#A78BFA><bold>" + name + "</bold></gradient>",
+                    "<gradient:#55E7FF:#A78BFA><bold>ᴄᴀᴛᴇɢᴏʀʏ: "
+                            + name + "</bold></gradient>",
                     List.of(
                             "",
-                            "<dark_gray>━━━━━━━━━━━━━━━━",
-                            "<gray>Category ID: <white>" + id,
-                            "<gray>Display Slot: <aqua>" + (categorySlot + 1),
-                            "<gray>Status: " + (enabled
-                                    ? "<green>ENABLED"
-                                    : "<red>DISABLED"),
-                            "<dark_gray>━━━━━━━━━━━━━━━━",
+                            "<dark_gray>━━━━━━━━━━━━━━━━━━",
+                            "<gray>ɪᴅ: <white>" + id,
+                            "<gray>ѕʟᴏᴛ: <aqua>" + (categorySlot + 1),
+                            "<gray>ѕᴛᴀᴛᴜѕ: "
+                                    + (enabled
+                                    ? "<green>ᴇɴᴀʙʟᴇᴅ"
+                                    : "<red>ᴅɪѕᴀʙʟᴇᴅ"),
+                            "<dark_gray>━━━━━━━━━━━━━━━━━━",
                             "",
-                            "<yellow>LEFT CLICK <gray>Change slot",
-                            "<red>RIGHT CLICK <gray>Delete category",
-                            "<light_purple>MIDDLE CLICK <gray>Toggle status",
+                            "<green>ᴄʟɪᴄᴋ ᴛᴏ ᴇᴅɪᴛ ѕʟᴏᴛ",
+                            "<red>ʀɪɢʜᴛ ᴄʟɪᴄᴋ ᴛᴏ ᴅᴇʟᴇᴛᴇ",
+                            "<light_purple>ᴍɪᴅᴅʟᴇ ᴄʟɪᴄᴋ ᴛᴏ ᴛᴏɢɢʟᴇ",
                             ""
                     )
             ));
         }
 
+        // Create category
         inventory.setItem(45, ItemUtil.create(
                 Material.LIME_DYE,
                 1,
-                "<gradient:#39FF88:#00BFA5><bold>CREATE CATEGORY</bold></gradient>",
+                "<gradient:#39FF88:#00BFA5><bold>ᴄʀᴇᴀᴛᴇ ᴄᴀᴛᴇɢᴏʀʏ</bold></gradient>",
                 List.of(
                         "",
-                        "<gray>Create a new shop category.",
+                        "<gray>ᴄʀᴇᴀᴛᴇ ᴀ ɴᴇᴡ ѕʜᴏᴘ ᴄᴀᴛᴇɢᴏʀʏ.",
                         "",
-                        "<yellow>Click to create"
+                        "<yellow>ᴄʟɪᴄᴋ ᴛᴏ ᴄʀᴇᴀᴛᴇ"
                 )
         ));
 
+        // Back
         inventory.setItem(49, ItemUtil.create(
                 Material.ARROW,
                 1,
-                "<gradient:#FF6B6B:#FFB86B><bold>BACK</bold></gradient>",
+                "<gradient:#FF6B6B:#FFB86B><bold>ʙᴀᴄᴋ</bold></gradient>",
                 List.of(
                         "",
-                        "<gray>Return to admin menu."
+                        "<gray>ʀᴇᴛᴜʀɴ ᴛᴏ ᴀᴅᴍɪɴ ᴍᴇɴᴜ."
                 )
         ));
 
+        // Guide
         inventory.setItem(53, ItemUtil.create(
                 Material.BOOK,
                 1,
-                "<aqua><bold>CATEGORY GUIDE</bold>",
+                "<aqua><bold>ᴄᴀᴛᴇɢᴏʀʏ ɢᴜɪᴅᴇ</bold>",
                 List.of(
                         "",
-                        "<gray>Manage your shop categories.",
+                        "<gray>ᴍᴀɴᴀɢᴇ ʏᴏᴜʀ ѕʜᴏᴘ ᴄᴀᴛᴇɢᴏʀɪᴇѕ.",
                         "",
-                        "<yellow>Left Click <dark_gray>- <white>Change slot",
-                        "<red>Right Click <dark_gray>- <white>Delete",
-                        "<light_purple>Middle Click <dark_gray>- <white>Toggle status",
+                        "<green>ᴛᴏᴜᴄʜ ʟᴇꜰᴛ <dark_gray>- <white>ᴄʜᴀɴɢᴇ ѕʟᴏᴛ",
+                        "<red>ʀɪɢʜᴛ ᴄʟɪᴄᴋ <dark_gray>- <white>ᴅᴇʟᴇᴛᴇ",
+                        "<light_purple>ᴍɪᴅᴅʟᴇ ᴄʟɪᴄᴋ <dark_gray>- <white>ᴛᴏɢɢʟᴇ",
                         "",
-                        "<gray>Slot numbers: <aqua>1 - 54",
-                        "<red>Slot 50 is reserved for Back."
+                        "<gray>ѕʟᴏᴛ ɴᴜᴍʙᴇʀ: <aqua>1 - 54",
+                        "<red>ѕʟᴏᴛ 50 ɪѕ ʀᴇѕᴇʀᴠᴇᴅ."
                 )
         ));
 
