@@ -14,7 +14,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
-public class GemsAdminCommand implements CommandExecutor, TabCompleter {
+public final class GemsAdminCommand implements CommandExecutor, TabCompleter {
 
     private final VortexGems plugin;
 
@@ -23,12 +23,9 @@ public class GemsAdminCommand implements CommandExecutor, TabCompleter {
     }
 
     @Override
-    public boolean onCommand(
-            CommandSender sender,
-            Command command,
-            String label,
-            String[] args
-    ) {
+    public boolean onCommand(CommandSender sender, Command command,
+                             String label, String[] args) {
+
         if (!sender.hasPermission("vortexgems.admin")) {
             sender.sendMessage(ColorUtil.text("<red>You don't have permission."));
             return true;
@@ -40,7 +37,10 @@ public class GemsAdminCommand implements CommandExecutor, TabCompleter {
         }
 
         switch (args[0].toLowerCase(Locale.ROOT)) {
-            case "reload" -> reload(sender);
+            case "reload" -> {
+                plugin.reloadPlugin();
+                sender.sendMessage(ColorUtil.text("<green>VortexGems reloaded."));
+            }
             case "balance", "bal" -> balance(sender, args);
             case "add" -> modifyBalance(sender, args, "add");
             case "remove" -> modifyBalance(sender, args, "remove");
@@ -52,13 +52,6 @@ public class GemsAdminCommand implements CommandExecutor, TabCompleter {
         }
 
         return true;
-    }
-
-    private void reload(CommandSender sender) {
-        plugin.reloadPlugin();
-        sender.sendMessage(ColorUtil.text(
-                "<green>VortexGems configuration successfully reloaded."
-        ));
     }
 
     private void balance(CommandSender sender, String[] args) {
@@ -76,12 +69,12 @@ public class GemsAdminCommand implements CommandExecutor, TabCompleter {
             return;
         }
 
-        long amount = plugin.getGemsManager().getBalance(target.getUniqueId());
+        long balance = plugin.getGemsManager().getBalance(target.getUniqueId());
 
         sender.sendMessage(ColorUtil.text(
                 "<gold>" + target.getName()
                         + "<gray>'s balance: <aqua>"
-                        + String.format("%,d", amount) + " Gems"
+                        + ColorUtil.formatGems(balance)
         ));
     }
 
@@ -113,44 +106,62 @@ public class GemsAdminCommand implements CommandExecutor, TabCompleter {
             return;
         }
 
-        if (amount < 0 || (action.equals("add") || action.equals("remove")) && amount == 0) {
+        if (amount <= 0) {
             sender.sendMessage(ColorUtil.text("<red>Amount must be greater than zero."));
             return;
         }
+
+        String playerName = target.getName() == null
+                ? target.getUniqueId().toString()
+                : target.getName();
 
         boolean success;
 
         switch (action) {
             case "add" -> success = plugin.getGemsManager().addBalance(
-                    target.getUniqueId(), amount
+                    target.getUniqueId(), playerName, amount
             );
+
             case "remove" -> success = plugin.getGemsManager().removeBalance(
                     target.getUniqueId(), amount
             );
+
             case "set" -> success = plugin.getGemsManager().setBalance(
-                    target.getUniqueId(), amount
+                    target.getUniqueId(), playerName, amount
             );
-            default -> {
-                return;
-            }
+
+            default -> success = false;
         }
 
         if (!success) {
             sender.sendMessage(ColorUtil.text(
-                    "<red>Failed to update the player's Gems balance."
+                    "<red>Failed to update Gems balance. Check the player's balance."
             ));
             return;
         }
 
+        String transactionType = switch (action) {
+            case "add" -> "ADMIN_ADD";
+            case "remove" -> "ADMIN_REMOVE";
+            default -> "ADMIN_SET";
+        };
+
+        plugin.getTransactionManager().record(
+                target.getUniqueId(),
+                transactionType,
+                amount,
+                "Admin " + action + " Gems"
+        );
+
         sender.sendMessage(ColorUtil.text(
-                "<green>Successfully " + action + "ed <aqua>"
-                        + String.format("%,d", amount)
-                        + " Gems <green>for <white>" + target.getName() + "<green>."
+                "<green>Successfully " + action + " <aqua>"
+                        + ColorUtil.formatGems(amount)
+                        + " <green>for <white>" + playerName
         ));
 
         if (target.isOnline()) {
             target.getPlayer().sendMessage(ColorUtil.text(
-                    "<gold>Your Gems balance has been updated by an administrator."
+                    "<green>Your Gems balance has been updated by an administrator."
             ));
         }
     }
@@ -167,7 +178,7 @@ public class GemsAdminCommand implements CommandExecutor, TabCompleter {
             case "create" -> {
                 if (args.length < 6) {
                     sender.sendMessage(ColorUtil.text(
-                            "<red>Usage: /gemsadmin category create <id> <name> <material> <slot>"
+                            "<red>/gemsadmin category create <id> <name> <material> <slot>"
                     ));
                     return;
                 }
@@ -175,11 +186,6 @@ public class GemsAdminCommand implements CommandExecutor, TabCompleter {
                 String id = args[2].toLowerCase(Locale.ROOT);
                 String name = args[3];
                 Material material = Material.matchMaterial(args[4]);
-
-                if (material == null || !material.isItem()) {
-                    sender.sendMessage(ColorUtil.text("<red>Invalid material."));
-                    return;
-                }
 
                 int slot;
 
@@ -190,17 +196,19 @@ public class GemsAdminCommand implements CommandExecutor, TabCompleter {
                     return;
                 }
 
-                if (slot < 0 || slot > 53) {
-                    sender.sendMessage(ColorUtil.text("<red>Slot must be between 0 and 53."));
+                if (material == null || !material.isItem()) {
+                    sender.sendMessage(ColorUtil.text("<red>Invalid material."));
                     return;
                 }
 
-                if (plugin.getCategoryManager().exists(id)) {
-                    sender.sendMessage(ColorUtil.text("<red>Category already exists."));
+                if (!plugin.getCategoryManager().create(
+                        id, name, material, slot
+                )) {
+                    sender.sendMessage(ColorUtil.text(
+                            "<red>Failed to create category. Check ID and slot."
+                    ));
                     return;
                 }
-
-                plugin.getCategoryManager().create(id, name, material, slot);
 
                 sender.sendMessage(ColorUtil.text(
                         "<green>Category <white>" + id + " <green>created."
@@ -210,35 +218,24 @@ public class GemsAdminCommand implements CommandExecutor, TabCompleter {
             case "delete" -> {
                 if (args.length < 3) {
                     sender.sendMessage(ColorUtil.text(
-                            "<red>Usage: /gemsadmin category delete <id>"
+                            "<red>/gemsadmin category delete <id>"
                     ));
                     return;
                 }
 
-                String id = args[2].toLowerCase(Locale.ROOT);
-
-                if (!plugin.getCategoryManager().exists(id)) {
+                if (!plugin.getCategoryManager().delete(args[2])) {
                     sender.sendMessage(ColorUtil.text("<red>Category not found."));
                     return;
                 }
 
-                plugin.getCategoryManager().delete(id);
-
-                sender.sendMessage(ColorUtil.text(
-                        "<green>Category <white>" + id + " <green>deleted."
-                ));
+                sender.sendMessage(ColorUtil.text("<green>Category deleted."));
             }
 
-            case "list" -> {
-                List<String> categories = plugin.getCategoryManager().getCategoryIds();
-
-                sender.sendMessage(ColorUtil.text(
-                        "<gold>Categories: <white>"
-                                + (categories.isEmpty()
-                                ? "None"
-                                : String.join(", ", categories))
-                ));
-            }
+            case "list" -> sender.sendMessage(ColorUtil.text(
+                    "<gold>Categories: <white>"
+                            + String.join(", ",
+                            plugin.getCategoryManager().getCategoryIds())
+            ));
 
             default -> sender.sendMessage(ColorUtil.text(
                     "<red>Usage: /gemsadmin category <create|delete|list>"
@@ -258,20 +255,15 @@ public class GemsAdminCommand implements CommandExecutor, TabCompleter {
             case "create" -> {
                 if (args.length < 9) {
                     sender.sendMessage(ColorUtil.text(
-                            "<red>Usage: /gemsadmin reward create <id> <category> <name> <material> <amount> <price> <slot>"
+                            "<red>/gemsadmin reward create <id> <category> <name> <material> <amount> <price> <slot>"
                     ));
                     return;
                 }
 
                 String id = args[2].toLowerCase(Locale.ROOT);
-                String category = args[3].toLowerCase(Locale.ROOT);
+                String category = args[3];
                 String name = args[4];
                 Material material = Material.matchMaterial(args[5]);
-
-                if (material == null || !material.isItem()) {
-                    sender.sendMessage(ColorUtil.text("<red>Invalid material."));
-                    return;
-                }
 
                 int amount;
                 long price;
@@ -286,40 +278,19 @@ public class GemsAdminCommand implements CommandExecutor, TabCompleter {
                     return;
                 }
 
-                if (amount <= 0 || amount > material.getMaxStackSize()) {
-                    sender.sendMessage(ColorUtil.text("<red>Invalid reward amount."));
+                if (material == null || !material.isItem()) {
+                    sender.sendMessage(ColorUtil.text("<red>Invalid material."));
                     return;
                 }
 
-                if (price <= 0) {
-                    sender.sendMessage(ColorUtil.text("<red>Price must be greater than zero."));
+                if (!plugin.getRewardManager().create(
+                        id, category, name, material, amount, price, slot
+                )) {
+                    sender.sendMessage(ColorUtil.text(
+                            "<red>Failed to create reward. Check its values and category."
+                    ));
                     return;
                 }
-
-                if (slot < 0 || slot > 53) {
-                    sender.sendMessage(ColorUtil.text("<red>Slot must be between 0 and 53."));
-                    return;
-                }
-
-                if (!plugin.getCategoryManager().exists(category)) {
-                    sender.sendMessage(ColorUtil.text("<red>Category does not exist."));
-                    return;
-                }
-
-                if (plugin.getRewardManager().exists(id)) {
-                    sender.sendMessage(ColorUtil.text("<red>Reward already exists."));
-                    return;
-                }
-
-                plugin.getRewardManager().create(
-                        id,
-                        category,
-                        name,
-                        material,
-                        amount,
-                        price,
-                        slot
-                );
 
                 sender.sendMessage(ColorUtil.text(
                         "<green>Reward <white>" + id + " <green>created."
@@ -329,35 +300,24 @@ public class GemsAdminCommand implements CommandExecutor, TabCompleter {
             case "delete" -> {
                 if (args.length < 3) {
                     sender.sendMessage(ColorUtil.text(
-                            "<red>Usage: /gemsadmin reward delete <id>"
+                            "<red>/gemsadmin reward delete <id>"
                     ));
                     return;
                 }
 
-                String id = args[2].toLowerCase(Locale.ROOT);
-
-                if (!plugin.getRewardManager().exists(id)) {
+                if (!plugin.getRewardManager().delete(args[2])) {
                     sender.sendMessage(ColorUtil.text("<red>Reward not found."));
                     return;
                 }
 
-                plugin.getRewardManager().delete(id);
-
-                sender.sendMessage(ColorUtil.text(
-                        "<green>Reward <white>" + id + " <green>deleted."
-                ));
+                sender.sendMessage(ColorUtil.text("<green>Reward deleted."));
             }
 
-            case "list" -> {
-                List<String> rewards = plugin.getRewardManager().getRewardIds();
-
-                sender.sendMessage(ColorUtil.text(
-                        "<gold>Rewards: <white>"
-                                + (rewards.isEmpty()
-                                ? "None"
-                                : String.join(", ", rewards))
-                ));
-            }
+            case "list" -> sender.sendMessage(ColorUtil.text(
+                    "<gold>Rewards: <white>"
+                            + String.join(", ",
+                            plugin.getRewardManager().getRewardIds())
+            ));
 
             default -> sender.sendMessage(ColorUtil.text(
                     "<red>Usage: /gemsadmin reward <create|delete|list>"
@@ -396,24 +356,28 @@ public class GemsAdminCommand implements CommandExecutor, TabCompleter {
                     "reload", "balance", "add", "remove", "set",
                     "category", "reward", "help"
             ));
-        } else if (args.length == 2 && args[0].equalsIgnoreCase("category")) {
+        } else if (args.length == 2
+                && args[0].equalsIgnoreCase("category")) {
             suggestions.addAll(List.of("create", "delete", "list"));
-        } else if (args.length == 2 && args[0].equalsIgnoreCase("reward")) {
+        } else if (args.length == 2
+                && args[0].equalsIgnoreCase("reward")) {
             suggestions.addAll(List.of("create", "delete", "list"));
-        } else if (args.length == 2 && List.of("balance", "add", "remove", "set")
+        } else if (args.length == 2
+                && List.of("balance", "add", "remove", "set")
                 .contains(args[0].toLowerCase(Locale.ROOT))) {
-            for (OfflinePlayer player : Bukkit.getOfflinePlayers()) {
-                if (player.getName() != null) {
-                    suggestions.add(player.getName());
-                }
+            for (Player player : Bukkit.getOnlinePlayers()) {
+                suggestions.add(player.getName());
             }
-        } else if (args.length == 3 && args[0].equalsIgnoreCase("category")
+        } else if (args.length == 3
+                && args[0].equalsIgnoreCase("category")
                 && args[1].equalsIgnoreCase("delete")) {
             suggestions.addAll(plugin.getCategoryManager().getCategoryIds());
-        } else if (args.length == 3 && args[0].equalsIgnoreCase("reward")
+        } else if (args.length == 3
+                && args[0].equalsIgnoreCase("reward")
                 && args[1].equalsIgnoreCase("delete")) {
             suggestions.addAll(plugin.getRewardManager().getRewardIds());
-        } else if (args.length == 4 && args[0].equalsIgnoreCase("reward")
+        } else if (args.length == 4
+                && args[0].equalsIgnoreCase("reward")
                 && args[1].equalsIgnoreCase("create")) {
             suggestions.addAll(plugin.getCategoryManager().getCategoryIds());
         }
@@ -424,4 +388,4 @@ public class GemsAdminCommand implements CommandExecutor, TabCompleter {
                 .filter(value -> value.toLowerCase(Locale.ROOT).startsWith(input))
                 .toList();
     }
-}
+    }
