@@ -9,10 +9,11 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
-import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.inventory.ItemStack;
 
-public class MenuListener implements Listener {
+import java.util.Locale;
+
+public final class MenuListener implements Listener {
 
     private final VortexGems plugin;
 
@@ -26,30 +27,30 @@ public class MenuListener implements Listener {
             return;
         }
 
-        if (!(event.getInventory().getHolder() instanceof MenuHolder holder)) {
+        if (!(event.getInventory().getHolder(false) instanceof MenuHolder holder)) {
             return;
         }
 
         event.setCancelled(true);
 
-        if (event.getClickedInventory() == null
-                || event.getClickedInventory() != event.getInventory()) {
+        if (event.getClickedInventory() != event.getView().getTopInventory()) {
             return;
         }
 
         int slot = event.getRawSlot();
 
-        switch (holder.getMenuType().toLowerCase()) {
+        switch (holder.getMenu().toLowerCase(Locale.ROOT)) {
             case "main" -> handleMain(player, slot);
             case "buy" -> handleBuy(player, slot);
-            case "categories" -> handleCategories(player, slot, holder);
+            case "categories" -> handleCategories(player, slot);
             case "rewards" -> handleRewards(player, slot, holder);
             case "confirm" -> handleConfirm(player, slot, holder);
             case "admin" -> handleAdmin(player, slot);
-            case "category_editor" -> handleCategoryEditor(player, slot, holder);
-            case "reward_editor" -> handleRewardEditor(player, slot, holder);
+            case "category_editor" -> handleCategoryEditor(player, slot);
+            case "reward_editor" -> handleRewardEditor(player, slot);
             case "settings" -> handleSettings(player, slot);
-            default -> player.closeInventory();
+            default -> {
+            }
         }
     }
 
@@ -72,7 +73,7 @@ public class MenuListener implements Listener {
             default -> 0;
         };
 
-        if (amount <= 0) {
+        if (amount == 0) {
             if (slot == 40) {
                 plugin.getMenuManager().openMain(player);
             }
@@ -80,39 +81,40 @@ public class MenuListener implements Listener {
         }
 
         if (!plugin.getEconomyManager().buyGems(player, amount)) {
-            player.sendMessage(ColorUtil.text(
-                    plugin.getConfigManager().getMessage(
-                            "economy.purchase-failed",
-                            "<red>Purchase failed."
-                    )
-            ));
+            player.sendMessage(ColorUtil.text("<red>Gems purchase failed. Check your money."));
             return;
         }
 
         player.sendMessage(ColorUtil.text(
-                plugin.getConfigManager().getMessage(
-                        "economy.purchase-success",
-                        "<green>You purchased <white>{amount} Gems<green>."
-                ).replace("{amount}", String.valueOf(amount))
+                "<green>Successfully purchased <aqua>"
+                        + amount + " Gems<green>."
         ));
 
         plugin.getMenuManager().openBuy(player);
     }
 
-    private void handleCategories(Player player, int slot, MenuHolder holder) {
+    private void handleCategories(Player player, int slot) {
         if (slot == 40) {
             plugin.getMenuManager().openMain(player);
             return;
         }
 
+        // CategoryMenu uses category IDs as inventory holder data per item.
         ItemStack item = player.getOpenInventory().getTopInventory().getItem(slot);
+
         if (item == null || item.getType().isAir()) {
             return;
         }
 
-        String categoryId = holder.getData();
-        if (categoryId != null && !categoryId.isBlank()) {
-            plugin.getMenuManager().openRewards(player, categoryId);
+        String category = item.getItemMeta() == null
+                ? null
+                : item.getItemMeta().getPersistentDataContainer().get(
+                        new org.bukkit.NamespacedKey(plugin, "category"),
+                        org.bukkit.persistence.PersistentDataType.STRING
+                );
+
+        if (category != null) {
+            plugin.getMenuManager().openRewards(player, category);
         }
     }
 
@@ -123,16 +125,21 @@ public class MenuListener implements Listener {
         }
 
         ItemStack item = player.getOpenInventory().getTopInventory().getItem(slot);
+
         if (item == null || item.getType().isAir()) {
             return;
         }
 
-        String rewardId = holder.getData();
-        if (rewardId == null || rewardId.isBlank()) {
-            return;
-        }
+        String rewardId = item.getItemMeta() == null
+                ? null
+                : item.getItemMeta().getPersistentDataContainer().get(
+                        new org.bukkit.NamespacedKey(plugin, "reward"),
+                        org.bukkit.persistence.PersistentDataType.STRING
+                );
 
-        plugin.getMenuManager().openConfirm(player, rewardId);
+        if (rewardId != null) {
+            plugin.getMenuManager().openConfirm(player, rewardId);
+        }
     }
 
     private void handleConfirm(Player player, int slot, MenuHolder holder) {
@@ -143,72 +150,50 @@ public class MenuListener implements Listener {
             return;
         }
 
-        if (slot != 15 || rewardId == null || rewardId.isBlank()) {
+        if (slot != 15 || rewardId == null || !plugin.getRewardManager().exists(rewardId)) {
             return;
         }
 
-        var reward = plugin.getRewardManager().getReward(rewardId);
-        if (reward == null) {
-            player.sendMessage(ColorUtil.text("<red>Reward not found."));
+        var reward = plugin.getConfigManager().getRewards()
+                .getConfigurationSection("rewards." + rewardId);
+
+        if (reward == null || !plugin.getRewardManager().isEnabled(rewardId)) {
+            player.sendMessage(ColorUtil.text("<red>This reward is unavailable."));
             player.closeInventory();
             return;
         }
 
-        int price = reward.getInt("price", 0);
-        if (price <= 0) {
-            player.sendMessage(ColorUtil.text("<red>Invalid reward price."));
+        long price = plugin.getRewardManager().getPrice(rewardId);
+
+        if (!plugin.getGemsManager().removeBalance(player.getUniqueId(), price)) {
+            player.sendMessage(ColorUtil.text("<red>You don't have enough Gems."));
             return;
         }
 
-        String type = reward.getString("type", "ITEM").toUpperCase();
-        String command = reward.getString("command", "");
+        String type = plugin.getRewardManager().getType(rewardId);
 
-        if (type.equals("ITEM")) {
-            String materialName = reward.getString("material", "DIAMOND");
-            Material material = Material.matchMaterial(materialName);
+        if (type.equalsIgnoreCase("ITEM")) {
+            Material material = plugin.getRewardManager().getMaterial(rewardId);
+            int amount = plugin.getRewardManager().getAmount(rewardId);
+            ItemStack item = new ItemStack(material, amount);
 
-            if (material == null || !material.isItem()) {
-                player.sendMessage(ColorUtil.text("<red>Invalid reward item."));
-                return;
-            }
-
-            int amount = Math.max(1, reward.getInt("amount", 1));
-            ItemStack rewardItem = new ItemStack(material, Math.min(amount, material.getMaxStackSize()));
-
-            if (amount > material.getMaxStackSize()) {
-                player.sendMessage(ColorUtil.text("<red>Reward amount exceeds maximum stack size."));
-                return;
-            }
-
-            if (player.getInventory().firstEmpty() == -1) {
+            var leftovers = player.getInventory().addItem(item);
+            if (!leftovers.isEmpty()) {
+                plugin.getGemsManager().addBalance(player.getUniqueId(), price);
                 player.sendMessage(ColorUtil.text("<red>Your inventory is full."));
                 return;
             }
-
-            if (!plugin.getGemsManager().removeBalance(player.getUniqueId(), price)) {
-                player.sendMessage(ColorUtil.text("<red>You don't have enough Gems."));
-                return;
+        } else if (type.equalsIgnoreCase("COMMAND")) {
+            for (String command : plugin.getRewardManager().getCommands(rewardId)) {
+                Bukkit.dispatchCommand(
+                        Bukkit.getConsoleSender(),
+                        command.replace("{player}", player.getName())
+                                .replace("{uuid}", player.getUniqueId().toString())
+                );
             }
-
-            player.getInventory().addItem(rewardItem);
-        } else if (type.equals("COMMAND")) {
-            if (command.isBlank()) {
-                player.sendMessage(ColorUtil.text("<red>Reward command is not configured."));
-                return;
-            }
-
-            if (!plugin.getGemsManager().removeBalance(player.getUniqueId(), price)) {
-                player.sendMessage(ColorUtil.text("<red>You don't have enough Gems."));
-                return;
-            }
-
-            Bukkit.dispatchCommand(
-                    Bukkit.getConsoleSender(),
-                    command.replace("{player}", player.getName())
-                            .replace("{uuid}", player.getUniqueId().toString())
-            );
         } else {
-            player.sendMessage(ColorUtil.text("<red>Unsupported reward type."));
+            plugin.getGemsManager().addBalance(player.getUniqueId(), price);
+            player.sendMessage(ColorUtil.text("<red>Invalid reward type."));
             return;
         }
 
@@ -219,13 +204,7 @@ public class MenuListener implements Listener {
                 "Purchased reward: " + rewardId
         );
 
-        player.sendMessage(ColorUtil.text(
-                plugin.getConfigManager().getMessage(
-                        "reward.purchase-success",
-                        "<green>Reward purchased successfully!"
-                )
-        ));
-
+        player.sendMessage(ColorUtil.text("<green>Reward purchased successfully!"));
         player.closeInventory();
     }
 
@@ -241,38 +220,22 @@ public class MenuListener implements Listener {
             case 14 -> plugin.getMenuManager().openSettings(player);
             case 31 -> {
                 plugin.reloadPlugin();
-                player.sendMessage(ColorUtil.text("<green>VortexGems configuration reloaded."));
+                player.sendMessage(ColorUtil.text("<green>Configuration reloaded."));
                 plugin.getMenuManager().openAdmin(player);
             }
             case 40 -> plugin.getMenuManager().openMain(player);
         }
     }
 
-    private void handleCategoryEditor(Player player, int slot, MenuHolder holder) {
-        if (slot == 40) {
+    private void handleCategoryEditor(Player player, int slot) {
+        if (slot == 40 || slot == 49) {
             plugin.getMenuManager().openAdmin(player);
-            return;
-        }
-
-        if (slot == 41) {
-            player.closeInventory();
-            player.sendMessage(ColorUtil.text(
-                    "<yellow>Use /gemsadmin category create <id> <name> to create a category."
-            ));
         }
     }
 
-    private void handleRewardEditor(Player player, int slot, MenuHolder holder) {
-        if (slot == 40) {
+    private void handleRewardEditor(Player player, int slot) {
+        if (slot == 49) {
             plugin.getMenuManager().openAdmin(player);
-            return;
-        }
-
-        if (slot == 41) {
-            player.closeInventory();
-            player.sendMessage(ColorUtil.text(
-                    "<yellow>Use /gemsadmin reward create <id> <category> <name> <price> to create a reward."
-            ));
         }
     }
 
@@ -283,12 +246,6 @@ public class MenuListener implements Listener {
         }
 
         switch (slot) {
-            case 10 -> {
-                player.closeInventory();
-                player.sendMessage(ColorUtil.text(
-                        "<yellow>Change purchase price in config.yml: economy.price-per-gem"
-                ));
-            }
             case 12 -> {
                 boolean enabled = plugin.getConfig().getBoolean("transfer.enabled", true);
                 plugin.getConfig().set("transfer.enabled", !enabled);
@@ -301,12 +258,6 @@ public class MenuListener implements Listener {
                 plugin.saveConfig();
                 plugin.getMenuManager().openSettings(player);
             }
-            case 16 -> {
-                player.closeInventory();
-                player.sendMessage(ColorUtil.text(
-                        "<yellow>Change leaderboard limit in config.yml: leaderboard.limit"
-                ));
-            }
             case 31 -> {
                 plugin.reloadPlugin();
                 player.sendMessage(ColorUtil.text("<green>Configuration reloaded."));
@@ -315,9 +266,4 @@ public class MenuListener implements Listener {
             case 40 -> plugin.getMenuManager().openAdmin(player);
         }
     }
-
-    @EventHandler
-    public void onInventoryClose(InventoryCloseEvent event) {
-        // Reserved for future menu cleanup.
     }
-  }
