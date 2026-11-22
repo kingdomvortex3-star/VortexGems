@@ -9,6 +9,7 @@ import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public final class MainMenu {
@@ -23,21 +24,20 @@ public final class MainMenu {
         FileConfiguration config = plugin.getConfig();
 
         int size = config.getInt("gui.main.size", 45);
+
         if (size < 9 || size > 54 || size % 9 != 0) {
             size = 45;
         }
-
-        String title = config.getString(
-                "gui.main.title",
-                "<gradient:#00E5FF:#7B61FF><bold>VORTEX GEMS</bold></gradient>"
-        );
 
         MenuHolder holder = new MenuHolder("MAIN");
 
         Inventory inventory = Bukkit.createInventory(
                 holder,
                 size,
-                ColorUtil.text(title)
+                ColorUtil.text(config.getString(
+                        "gui.main.title",
+                        "<dark_gray>VORTEX GEMS"
+                ))
         );
 
         holder.setInventory(inventory);
@@ -62,10 +62,10 @@ public final class MainMenu {
                 "<green><bold>YOUR GEMS</bold>",
                 List.of(
                         "",
-                        "<gray>Current balance:",
-                        "<aqua><bold>" + ColorUtil.format(balance) + " Gems",
+                        "<gray>Your current balance:",
+                        "<aqua><bold>" + ColorUtil.formatGems(balance),
                         "",
-                        "<yellow>Your personal Gems balance."
+                        "<yellow>Your Gems wallet."
                 )
         ));
 
@@ -77,7 +77,7 @@ public final class MainMenu {
                         "",
                         "<gray>Purchase Gems using server money.",
                         "",
-                        "<yellow>Click to open"
+                        "<yellow>Click to open."
                 )
         ));
 
@@ -87,23 +87,40 @@ public final class MainMenu {
                 "<aqua><bold>GEMS SHOP</bold>",
                 List.of(
                         "",
-                        "<gray>Browse categories and rewards.",
-                        "<gray>Spend your Gems on exclusive items.",
+                        "<gray>Browse available reward categories.",
+                        "<gray>Purchase exclusive rewards.",
                         "",
-                        "<yellow>Click to open"
+                        "<yellow>Click to open."
                 )
         ));
+
+        List<String> leaderboardLore = new ArrayList<>();
+        leaderboardLore.add("");
+        leaderboardLore.add("<gray>Top Gems players:");
+        leaderboardLore.add("");
+
+        int rank = 1;
+
+        for (var entry : plugin.getLeaderboardManager().getTop(5)) {
+            leaderboardLore.add(
+                    "<yellow>#" + rank++ + " <white>" + entry.getName()
+                            + " <dark_gray>- <aqua>"
+                            + ColorUtil.format(entry.getBalance())
+            );
+        }
+
+        if (rank == 1) {
+            leaderboardLore.add("<gray>No leaderboard data available.");
+        }
+
+        leaderboardLore.add("");
+        leaderboardLore.add("<yellow>Top 5 players");
 
         setItem(inventory, leaderboardSlot, ItemUtil.create(
                 Material.GOLDEN_HELMET,
                 1,
                 "<light_purple><bold>LEADERBOARD</bold>",
-                List.of(
-                        "",
-                        "<gray>See the richest Gems players.",
-                        "",
-                        "<yellow>Click to view"
-                )
+                leaderboardLore
         ));
 
         setItem(inventory, closeSlot, ItemUtil.create(
@@ -119,9 +136,13 @@ public final class MainMenu {
         player.openInventory(inventory);
     }
 
-    private void setItem(Inventory inventory, int slot, org.bukkit.inventory.ItemStack item) {
+    private void setItem(
+            Inventory inventory,
+            int slot,
+            org.bukkit.inventory.ItemStack item
+    ) {
         if (slot >= 0 && slot < inventory.getSize()) {
             inventory.setItem(slot, item);
         }
     }
-          }
+}
