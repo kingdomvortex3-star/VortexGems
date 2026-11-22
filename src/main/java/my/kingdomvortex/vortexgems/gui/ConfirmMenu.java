@@ -4,11 +4,15 @@ package my.kingdomvortex.vortexgems.gui;
 import my.kingdomvortex.vortexgems.VortexGems;
 import my.kingdomvortex.vortexgems.util.ColorUtil;
 import my.kingdomvortex.vortexgems.util.ItemUtil;
+import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public final class ConfirmMenu {
@@ -24,7 +28,7 @@ public final class ConfirmMenu {
     public void open(Player player) {
         if (!plugin.getRewardManager().exists(rewardId)
                 || !plugin.getRewardManager().isEnabled(rewardId)) {
-            player.sendMessage(ColorUtil.text("<red>Reward tidak tersedia."));
+            player.sendMessage(ColorUtil.text("<red>Reward is unavailable."));
             return;
         }
 
@@ -47,26 +51,59 @@ public final class ConfirmMenu {
             inventory.setItem(slot, ItemUtil.filler());
         }
 
-        Material material = plugin.getRewardManager().getMaterial(rewardId);
-        int amount = plugin.getRewardManager().getAmount(rewardId);
-        String name = plugin.getRewardManager().getName(rewardId);
-        long price = plugin.getRewardManager().getPrice(rewardId);
+        ItemStack preview = plugin.getRewardManager().getItemStack(rewardId);
 
-        inventory.setItem(13, ItemUtil.create(
-                material,
-                amount,
-                name,
-                List.of(
-                        "",
-                        "<gray>Price: <aqua>" + ColorUtil.formatGems(price),
-                        "<gray>Your balance: <aqua>" +
-                                ColorUtil.formatGems(
-                                        plugin.getGemsManager().getBalance(
-                                                player.getUniqueId()
-                                        )
-                                )
-                )
-        ));
+        if (preview == null || preview.getType().isAir()) {
+            Material material = plugin.getRewardManager().getMaterial(rewardId);
+
+            if (material == null || material.isAir()) {
+                material = Material.CHEST;
+            }
+
+            preview = new ItemStack(
+                    material,
+                    plugin.getRewardManager().getAmount(rewardId)
+            );
+        } else {
+            preview = preview.clone();
+        }
+
+        long price = plugin.getRewardManager().getPrice(rewardId);
+        long balance = plugin.getGemsManager().getBalance(
+                player.getUniqueId()
+        );
+
+        ItemMeta meta = preview.getItemMeta();
+
+        if (meta != null) {
+            List<Component> lore = new ArrayList<>();
+
+            if (meta.lore() != null) {
+                lore.addAll(meta.lore());
+            }
+
+            lore.add(ColorUtil.text(""));
+            lore.add(ColorUtil.text("<dark_gray>━━━━━━━━━━━━━━━━"));
+            lore.add(ColorUtil.text(
+                    "<gray>Price: <aqua><bold>" +
+                            ColorUtil.formatGems(price) + " Gems"
+            ));
+            lore.add(ColorUtil.text(
+                    "<gray>Your balance: <aqua>" +
+                            ColorUtil.formatGems(balance) + " Gems"
+            ));
+
+            if (balance >= price) {
+                lore.add(ColorUtil.text("<green>You can afford this reward."));
+            } else {
+                lore.add(ColorUtil.text("<red>You don't have enough Gems."));
+            }
+
+            meta.lore(lore);
+            preview.setItemMeta(meta);
+        }
+
+        inventory.setItem(13, preview);
 
         inventory.setItem(11, ItemUtil.create(
                 Material.LIME_STAINED_GLASS_PANE,
@@ -74,7 +111,10 @@ public final class ConfirmMenu {
                 "<green><bold>CONFIRM PURCHASE</bold>",
                 List.of(
                         "",
-                        "<gray>Click to confirm your purchase."
+                        "<gray>Purchase this reward for:",
+                        "<aqua>" + ColorUtil.formatGems(price) + " Gems",
+                        "",
+                        "<yellow>Click to confirm."
                 )
         ));
 
