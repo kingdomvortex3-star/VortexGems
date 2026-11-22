@@ -446,7 +446,10 @@ public final class MenuListener implements Listener {
                     "<aqua><bold>CATEGORY GUIDE"
             ));
             player.sendMessage(ColorUtil.text(
-                    "<gray>Left: change slot | Right: delete | Middle: toggle"
+                    "<gray>Left: change slot | Shift + Left: change icon"
+            ));
+            player.sendMessage(ColorUtil.text(
+                    "<gray>Right: delete | Middle: toggle"
             ));
             return;
         }
@@ -459,10 +462,14 @@ public final class MenuListener implements Listener {
             }
 
             if (click == ClickType.RIGHT) {
+                String categoryName =
+                        plugin.getCategoryManager().getName(id);
+
                 plugin.getCategoryManager().delete(id);
+
                 player.sendMessage(ColorUtil.text(
                         "<red>Category <white>"
-                                + plugin.getCategoryManager().getName(id)
+                                + categoryName
                                 + " <red>deleted."
                 ));
 
@@ -479,6 +486,41 @@ public final class MenuListener implements Listener {
                                 ? "<red>Category disabled."
                                 : "<green>Category enabled."
                 ));
+
+                plugin.getMenuManager().openCategoryEditor(player);
+                return;
+            }
+
+            // SHIFT + LEFT CLICK: Change category icon.
+            if (click == ClickType.SHIFT_LEFT) {
+                ItemStack hand =
+                        player.getInventory().getItemInMainHand();
+
+                if (hand == null || hand.getType().isAir()) {
+                    player.sendMessage(ColorUtil.text(
+                            "<red>Hold an item in your main hand first."
+                    ));
+                    return;
+                }
+
+                Material newMaterial = hand.getType();
+
+                boolean changed = plugin.getCategoryManager().setMaterial(
+                        id,
+                        newMaterial
+                );
+
+                if (changed) {
+                    player.sendMessage(ColorUtil.text(
+                            "<green>Category icon changed to <white>"
+                                    + newMaterial.name()
+                                    + "<green>."
+                    ));
+                } else {
+                    player.sendMessage(ColorUtil.text(
+                            "<red>Failed to change category icon."
+                    ));
+                }
 
                 plugin.getMenuManager().openCategoryEditor(player);
                 return;
@@ -982,3 +1024,4 @@ public final class MenuListener implements Listener {
         });
     }
 }
+
