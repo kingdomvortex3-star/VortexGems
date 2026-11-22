@@ -1,0 +1,27 @@
+messages:
+  no-permission: "<red>You do not have permission."
+  player-only: "<red>Only players can use this command."
+  player-not-found: "<red>Player not found."
+  invalid-number: "<red>Invalid number."
+  invalid-amount: "<red>Amount must be greater than zero."
+
+  balance: "<gray>Your Gems: <aqua><bold>{balance}</bold>"
+  balance-other: "<gray>{player}'s Gems: <aqua><bold>{balance}</bold>"
+
+  give-success: "<green>Gave <aqua>{amount} Gems <green>to <white>{player}."
+  receive-gems: "<green>You received <aqua>{amount} Gems."
+  take-success: "<green>Took <aqua>{amount} Gems <green>from <white>{player}."
+  set-success: "<green>Updated <white>{player}'s <green>balance."
+
+  insufficient-gems: "<red>You do not have enough Gems."
+  insufficient-money: "<red>You do not have enough money."
+
+  buy-success: "<green>You purchased <aqua>{amount} Gems."
+  reward-success: "<green>You purchased <aqua>{reward}."
+  transfer-success: "<green>You sent <aqua>{amount} Gems <green>to <white>{player}."
+  transfer-received: "<green>You received <aqua>{amount} Gems <green>from <white>{player}."
+
+  buying-disabled: "<red>Gem purchases are disabled."
+  transfer-disabled: "<red>Gem transfers are disabled."
+  database-error: "<red>A database error occurred."
+  reload-success: "<green>VortexGems reloaded successfully."
