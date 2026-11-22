@@ -1,0 +1,48 @@
+categories:
+  spawner:
+    enabled: true
+    name: "<aqua><bold>SPAWNERS</bold>"
+    material: SPAWNER
+    amount: 1
+    slot: 20
+    lore:
+      - ""
+      - "<gray>Purchase custom spawners."
+      - ""
+      - "<yellow>Click to open"
+
+  keys:
+    enabled: true
+    name: "<gold><bold>CRATE KEYS</bold>"
+    material: TRIPWIRE_HOOK
+    amount: 1
+    slot: 22
+    lore:
+      - ""
+      - "<gray>Get keys for server crates."
+      - ""
+      - "<yellow>Click to open"
+
+  ranks:
+    enabled: true
+    name: "<light_purple><bold>RANKS</bold>"
+    material: DIAMOND
+    amount: 1
+    slot: 24
+    lore:
+      - ""
+      - "<gray>Unlock exclusive ranks."
+      - ""
+      - "<yellow>Click to open"
+
+  special:
+    enabled: true
+    name: "<red><bold>SPECIAL ITEMS</bold>"
+    material: NETHER_STAR
+    amount: 1
+    slot: 31
+    lore:
+      - ""
+      - "<gray>Exclusive server rewards."
+      - ""
+      - "<yellow>Click to open"
