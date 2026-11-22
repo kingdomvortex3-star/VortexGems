@@ -5,6 +5,7 @@ import my.kingdomvortex.vortexgems.util.ColorUtil;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
+import org.bukkit.entity.Player;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -23,9 +24,12 @@ public final class GemsAdminCommand implements CommandExecutor, TabCompleter {
     }
 
     @Override
-    public boolean onCommand(CommandSender sender, Command command,
-                             String label, String[] args) {
-
+    public boolean onCommand(
+            CommandSender sender,
+            Command command,
+            String label,
+            String[] args
+    ) {
         if (!sender.hasPermission("vortexgems.admin")) {
             sender.sendMessage(ColorUtil.text("<red>You don't have permission."));
             return true;
@@ -42,9 +46,7 @@ public final class GemsAdminCommand implements CommandExecutor, TabCompleter {
                 sender.sendMessage(ColorUtil.text("<green>VortexGems reloaded."));
             }
             case "balance", "bal" -> balance(sender, args);
-            case "add" -> modifyBalance(sender, args, "add");
-            case "remove" -> modifyBalance(sender, args, "remove");
-            case "set" -> modifyBalance(sender, args, "set");
+            case "add", "remove", "set" -> modifyBalance(sender, args, args[0].toLowerCase(Locale.ROOT));
             case "category" -> category(sender, args);
             case "reward" -> reward(sender, args);
             case "help" -> sendHelp(sender);
@@ -69,12 +71,12 @@ public final class GemsAdminCommand implements CommandExecutor, TabCompleter {
             return;
         }
 
-        long balance = plugin.getGemsManager().getBalance(target.getUniqueId());
+        long amount = plugin.getGemsManager().getBalance(target.getUniqueId());
 
         sender.sendMessage(ColorUtil.text(
-                "<gold>" + target.getName()
+                "<gold>" + safeName(target)
                         + "<gray>'s balance: <aqua>"
-                        + ColorUtil.formatGems(balance)
+                        + ColorUtil.formatGems(amount)
         ));
     }
 
@@ -106,32 +108,25 @@ public final class GemsAdminCommand implements CommandExecutor, TabCompleter {
             return;
         }
 
-        if (amount <= 0) {
-            sender.sendMessage(ColorUtil.text("<red>Amount must be greater than zero."));
+        if (amount < 0 || (amount == 0 && !action.equals("set"))) {
+            sender.sendMessage(ColorUtil.text("<red>Invalid amount."));
             return;
         }
 
-        String playerName = target.getName() == null
-                ? target.getUniqueId().toString()
-                : target.getName();
+        String playerName = safeName(target);
 
-        boolean success;
-
-        switch (action) {
-            case "add" -> success = plugin.getGemsManager().addBalance(
+        boolean success = switch (action) {
+            case "add" -> plugin.getGemsManager().addBalance(
                     target.getUniqueId(), playerName, amount
             );
-
-            case "remove" -> success = plugin.getGemsManager().removeBalance(
+            case "remove" -> plugin.getGemsManager().removeBalance(
                     target.getUniqueId(), amount
             );
-
-            case "set" -> success = plugin.getGemsManager().setBalance(
+            case "set" -> plugin.getGemsManager().setBalance(
                     target.getUniqueId(), playerName, amount
             );
-
-            default -> success = false;
-        }
+            default -> false;
+        };
 
         if (!success) {
             sender.sendMessage(ColorUtil.text(
@@ -146,20 +141,22 @@ public final class GemsAdminCommand implements CommandExecutor, TabCompleter {
             default -> "ADMIN_SET";
         };
 
-        plugin.getTransactionManager().record(
-                target.getUniqueId(),
-                transactionType,
-                amount,
-                "Admin " + action + " Gems"
-        );
+        if (!action.equals("set") && amount > 0) {
+            plugin.getTransactionManager().record(
+                    target.getUniqueId(),
+                    transactionType,
+                    amount,
+                    "Admin " + action + " Gems"
+            );
+        }
 
         sender.sendMessage(ColorUtil.text(
                 "<green>Successfully " + action + " <aqua>"
                         + ColorUtil.formatGems(amount)
-                        + " <green>for <white>" + playerName
+                        + " <green>for <white>" + playerName + "<green>."
         ));
 
-        if (target.isOnline()) {
+        if (target.isOnline() && target.getPlayer() != null) {
             target.getPlayer().sendMessage(ColorUtil.text(
                     "<green>Your Gems balance has been updated by an administrator."
             ));
@@ -231,11 +228,16 @@ public final class GemsAdminCommand implements CommandExecutor, TabCompleter {
                 sender.sendMessage(ColorUtil.text("<green>Category deleted."));
             }
 
-            case "list" -> sender.sendMessage(ColorUtil.text(
-                    "<gold>Categories: <white>"
-                            + String.join(", ",
-                            plugin.getCategoryManager().getCategoryIds())
-            ));
+            case "list" -> {
+                var categories = plugin.getCategoryManager().getCategoryIds();
+
+                sender.sendMessage(ColorUtil.text(
+                        "<gold>Categories: <white>"
+                                + (categories.isEmpty()
+                                ? "None"
+                                : String.join(", ", categories))
+                ));
+            }
 
             default -> sender.sendMessage(ColorUtil.text(
                     "<red>Usage: /gemsadmin category <create|delete|list>"
@@ -313,16 +315,27 @@ public final class GemsAdminCommand implements CommandExecutor, TabCompleter {
                 sender.sendMessage(ColorUtil.text("<green>Reward deleted."));
             }
 
-            case "list" -> sender.sendMessage(ColorUtil.text(
-                    "<gold>Rewards: <white>"
-                            + String.join(", ",
-                            plugin.getRewardManager().getRewardIds())
-            ));
+            case "list" -> {
+                var rewards = plugin.getRewardManager().getRewardIds();
+
+                sender.sendMessage(ColorUtil.text(
+                        "<gold>Rewards: <white>"
+                                + (rewards.isEmpty()
+                                ? "None"
+                                : String.join(", ", rewards))
+                ));
+            }
 
             default -> sender.sendMessage(ColorUtil.text(
                     "<red>Usage: /gemsadmin reward <create|delete|list>"
             ));
         }
+    }
+
+    private String safeName(OfflinePlayer player) {
+        return player.getName() == null
+                ? player.getUniqueId().toString()
+                : player.getName();
     }
 
     private void sendHelp(CommandSender sender) {
@@ -388,4 +401,4 @@ public final class GemsAdminCommand implements CommandExecutor, TabCompleter {
                 .filter(value -> value.toLowerCase(Locale.ROOT).startsWith(input))
                 .toList();
     }
-    }
+            }
