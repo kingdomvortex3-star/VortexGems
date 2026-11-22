@@ -2,8 +2,8 @@
 package my.kingdomvortex.vortexgems.gui;
 
 import my.kingdomvortex.vortexgems.VortexGems;
+import my.kingdomvortex.vortexgems.util.ColorUtil;
 import my.kingdomvortex.vortexgems.util.ItemUtil;
-import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -25,7 +25,9 @@ public final class CategoryEditorMenu {
         Inventory inventory = Bukkit.createInventory(
                 holder,
                 54,
-                Component.text("VORTEX - CATEGORY MANAGER")
+                ColorUtil.text(
+                        "<gradient:#00E5FF:#8A2BE2><bold>VORTEX CATEGORY MANAGER</bold></gradient>"
+                )
         );
 
         holder.setInventory(inventory);
@@ -34,27 +36,35 @@ public final class CategoryEditorMenu {
             inventory.setItem(slot, ItemUtil.filler());
         }
 
-        int slot = 0;
+        int displaySlot = 0;
 
         for (String id : plugin.getCategoryManager().getCategoryIds()) {
-            if (slot >= 45) break;
+            if (displaySlot >= 45) {
+                break;
+            }
 
             String name = plugin.getCategoryManager().getName(id);
+            int categorySlot = plugin.getCategoryManager().getSlot(id);
+            boolean enabled = plugin.getCategoryManager().isEnabled(id);
 
-            inventory.setItem(slot++, ItemUtil.create(
+            inventory.setItem(displaySlot++, ItemUtil.create(
                     plugin.getCategoryManager().getMaterial(id),
-                    1,
-                    name,
+                    plugin.getCategoryManager().getAmount(id),
+                    "<gradient:#55E7FF:#A78BFA><bold>" + name + "</bold></gradient>",
                     List.of(
                             "",
-                            "<gray>ID: <white>" + id,
-                            "<gray>Status: " +
-                                    (plugin.getCategoryManager().isEnabled(id)
-                                            ? "<green>Enabled"
-                                            : "<red>Disabled"),
+                            "<dark_gray>━━━━━━━━━━━━━━━━",
+                            "<gray>Category ID: <white>" + id,
+                            "<gray>Display Slot: <aqua>" + (categorySlot + 1),
+                            "<gray>Status: " + (enabled
+                                    ? "<green>ENABLED"
+                                    : "<red>DISABLED"),
+                            "<dark_gray>━━━━━━━━━━━━━━━━",
                             "",
-                            "<yellow>Left-click: Edit",
-                            "<red>Right-click: Delete"
+                            "<yellow>LEFT CLICK <gray>Change slot",
+                            "<red>RIGHT CLICK <gray>Delete category",
+                            "<light_purple>MIDDLE CLICK <gray>Toggle status",
+                            ""
                     )
             ));
         }
@@ -62,10 +72,10 @@ public final class CategoryEditorMenu {
         inventory.setItem(45, ItemUtil.create(
                 Material.LIME_DYE,
                 1,
-                "<green><bold>CREATE CATEGORY</bold>",
+                "<gradient:#39FF88:#00BFA5><bold>CREATE CATEGORY</bold></gradient>",
                 List.of(
                         "",
-                        "<gray>Create a new category.",
+                        "<gray>Create a new shop category.",
                         "",
                         "<yellow>Click to create"
                 )
@@ -74,8 +84,28 @@ public final class CategoryEditorMenu {
         inventory.setItem(49, ItemUtil.create(
                 Material.ARROW,
                 1,
-                "<yellow><bold>BACK</bold>",
-                List.of()
+                "<gradient:#FF6B6B:#FFB86B><bold>BACK</bold></gradient>",
+                List.of(
+                        "",
+                        "<gray>Return to admin menu."
+                )
+        ));
+
+        inventory.setItem(53, ItemUtil.create(
+                Material.BOOK,
+                1,
+                "<aqua><bold>CATEGORY GUIDE</bold>",
+                List.of(
+                        "",
+                        "<gray>Manage your shop categories.",
+                        "",
+                        "<yellow>Left Click <dark_gray>- <white>Change slot",
+                        "<red>Right Click <dark_gray>- <white>Delete",
+                        "<light_purple>Middle Click <dark_gray>- <white>Toggle status",
+                        "",
+                        "<gray>Slot numbers: <aqua>1 - 54",
+                        "<red>Slot 50 is reserved for Back."
+                )
         ));
 
         player.openInventory(inventory);
