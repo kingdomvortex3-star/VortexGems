@@ -1,6 +1,8 @@
+
 package my.kingdomvortex.vortexgems.gui;
 
 import my.kingdomvortex.vortexgems.VortexGems;
+import my.kingdomvortex.vortexgems.manager.LeaderboardManager;
 import my.kingdomvortex.vortexgems.util.ColorUtil;
 import my.kingdomvortex.vortexgems.util.ItemUtil;
 import org.bukkit.Bukkit;
@@ -24,20 +26,21 @@ public final class MainMenu {
         FileConfiguration config = plugin.getConfig();
 
         int size = config.getInt("gui.main.size", 45);
-
         if (size < 9 || size > 54 || size % 9 != 0) {
             size = 45;
         }
+
+        String title = config.getString(
+                "gui.main.title",
+                "<dark_gray><bold>VORTEX GEMS</bold>"
+        );
 
         MenuHolder holder = new MenuHolder("MAIN");
 
         Inventory inventory = Bukkit.createInventory(
                 holder,
                 size,
-                ColorUtil.text(config.getString(
-                        "gui.main.title",
-                        "<dark_gray>VORTEX GEMS"
-                ))
+                ColorUtil.text(title)
         );
 
         holder.setInventory(inventory);
@@ -46,84 +49,110 @@ public final class MainMenu {
             inventory.setItem(slot, ItemUtil.filler());
         }
 
-        int balanceSlot = config.getInt("gui.main.balance-slot", 4);
-        int buySlot = config.getInt("gui.main.buy-slot", 20);
-        int shopSlot = config.getInt("gui.main.shop-slot", 22);
-        int leaderboardSlot = config.getInt("gui.main.leaderboard-slot", 24);
-        int closeSlot = config.getInt("gui.main.close-slot", 40);
+        int balanceSlot = getSlot(config, "gui.main.balance-slot", 4, size);
+        int buySlot = getSlot(config, "gui.main.buy-slot", 20, size);
+        int shopSlot = getSlot(config, "gui.main.shop-slot", 22, size);
+        int leaderboardSlot = getSlot(
+                config,
+                "gui.main.leaderboard-slot",
+                24,
+                size
+        );
+        int closeSlot = getSlot(config, "gui.main.close-slot", 40, size);
 
         long balance = plugin.getGemsManager().getBalance(
                 player.getUniqueId()
         );
 
-        setItem(inventory, balanceSlot, ItemUtil.create(
+        inventory.setItem(balanceSlot, ItemUtil.create(
                 Material.EMERALD,
                 1,
-                "<green><bold>YOUR GEMS</bold>",
+                "<gradient:#00E5FF:#7B61FF><bold>YOUR GEMS</bold></gradient>",
                 List.of(
                         "",
-                        "<gray>Your current balance:",
-                        "<aqua><bold>" + ColorUtil.formatGems(balance),
+                        "<gray>Player: <white>" + player.getName(),
+                        "<gray>Balance: <aqua>" + ColorUtil.formatGems(balance),
                         "",
-                        "<yellow>Your Gems wallet."
+                        "<yellow>Your current Gems balance."
                 )
         ));
 
-        setItem(inventory, buySlot, ItemUtil.create(
+        inventory.setItem(buySlot, ItemUtil.create(
                 Material.GOLD_INGOT,
                 1,
                 "<gold><bold>BUY GEMS</bold>",
                 List.of(
                         "",
                         "<gray>Purchase Gems using server money.",
+                        "<gray>Price per Gem: <gold>" +
+                                ColorUtil.format(
+                                        (long) plugin.getEconomyManager()
+                                                .getPricePerGem()
+                                ),
                         "",
-                        "<yellow>Click to open."
+                        "<yellow>Click to open purchase menu."
                 )
         ));
 
-        setItem(inventory, shopSlot, ItemUtil.create(
+        inventory.setItem(shopSlot, ItemUtil.create(
                 Material.CHEST,
                 1,
                 "<aqua><bold>GEMS SHOP</bold>",
                 List.of(
                         "",
-                        "<gray>Browse available reward categories.",
-                        "<gray>Purchase exclusive rewards.",
+                        "<gray>Browse available rewards.",
+                        "<gray>Spend your Gems on exclusive items.",
                         "",
-                        "<yellow>Click to open."
+                        "<yellow>Click to browse categories."
                 )
         ));
 
         List<String> leaderboardLore = new ArrayList<>();
         leaderboardLore.add("");
-        leaderboardLore.add("<gray>Top Gems players:");
+        leaderboardLore.add("<gray>Top Gems holders:");
         leaderboardLore.add("");
 
-        int rank = 1;
-
-        for (var entry : plugin.getLeaderboardManager().getTop(5)) {
-            leaderboardLore.add(
-                    "<yellow>#" + rank++ + " <white>" + entry.getName()
-                            + " <dark_gray>- <aqua>"
-                            + ColorUtil.format(entry.getBalance())
+        if (config.getBoolean("settings.leaderboard.enabled", true)) {
+            int limit = Math.max(
+                    1,
+                    Math.min(
+                            10,
+                            config.getInt("settings.leaderboard.limit", 10)
+                    )
             );
-        }
 
-        if (rank == 1) {
-            leaderboardLore.add("<gray>No leaderboard data available.");
+            List<LeaderboardManager.Entry> entries =
+                    plugin.getLeaderboardManager().getTop(limit);
+
+            if (entries.isEmpty()) {
+                leaderboardLore.add("<dark_gray>No leaderboard data yet.");
+            } else {
+                int rank = 1;
+
+                for (LeaderboardManager.Entry entry : entries) {
+                    leaderboardLore.add(
+                            "<yellow>" + rank++ + ". <white>" +
+                                    entry.getName() +
+                                    " <dark_gray>» <aqua>" +
+                                    ColorUtil.format(entry.getBalance())
+                    );
+                }
+            }
+        } else {
+            leaderboardLore.add("<red>Leaderboard is disabled.");
         }
 
         leaderboardLore.add("");
-        leaderboardLore.add("<yellow>Top 5 players");
+        leaderboardLore.add("<gray>Leaderboard overview.");
 
-        setItem(inventory, leaderboardSlot, ItemUtil.create(
+        inventory.setItem(leaderboardSlot, ItemUtil.create(
                 Material.GOLDEN_HELMET,
                 1,
-                "<light_purple><bold>LEADERBOARD</bold>",
+                "<gold><bold>GEMS LEADERBOARD</bold>",
                 leaderboardLore
         ));
 
-        setItem(inventory, closeSlot, ItemUtil.create(
+        inventory.setItem(closeSlot, ItemUtil.create(
                 Material.BARRIER,
                 1,
                 "<red><bold>CLOSE</bold>",
@@ -136,13 +165,18 @@ public final class MainMenu {
         player.openInventory(inventory);
     }
 
-    private void setItem(
-            Inventory inventory,
-            int slot,
-            org.bukkit.inventory.ItemStack item
+    private int getSlot(
+            FileConfiguration config,
+            String path,
+            int fallback,
+            int size
     ) {
-        if (slot >= 0 && slot < inventory.getSize()) {
-            inventory.setItem(slot, item);
+        int slot = config.getInt(path, fallback);
+
+        if (slot < 0 || slot >= size) {
+            return Math.max(0, Math.min(fallback, size - 1));
         }
+
+        return slot;
     }
 }
