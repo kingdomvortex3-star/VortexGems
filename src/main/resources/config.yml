@@ -1,24 +1,18 @@
+
 settings:
   prefix: "&8[&bVortexGems&8] &7"
   currency-name: "Gems"
   currency-symbol: "✦"
-
   starting-balance: 0
-  decimal-support: false
   max-balance: 1000000000
+  decimal-support: false
 
 economy:
   enabled: true
   buy-enabled: true
-
-  # Harga untuk 1 Gems.
-  # Bisa diganti kapan saja.
   price-per-gem: 1500
-
   min-purchase: 1
   max-purchase: 10000
-
-  # Menu pembelian.
   purchase-options:
     - 1
     - 5
@@ -26,7 +20,6 @@ economy:
     - 25
     - 50
     - 100
-
   confirm-purchase: true
 
 storage:
@@ -37,7 +30,6 @@ storage:
 leaderboard:
   enabled: true
   max-entries: 10
-  update-interval: 60
 
 shop:
   enabled: true
@@ -52,19 +44,28 @@ admin:
 security:
   prevent-negative-balance: true
   prevent-duplicate-purchase: true
-  log-transactions: true
   validate-rewards: true
+  log-transactions: true
 
-messages:
-  no-permission: "&cKamu tidak memiliki permission!"
-  player-only: "&cCommand ini hanya bisa digunakan player."
-  invalid-amount: "&cJumlah tidak valid."
-  player-not-found: "&cPlayer tidak ditemukan."
-  not-enough-money: "&cUang kamu tidak cukup!"
-  not-enough-gems: "&cGems kamu tidak cukup!"
-  purchase-success: "&aBerhasil membeli &b%amount% Gems&a!"
-  exchange-success: "&aBerhasil menukarkan &e%reward%&a!"
-  reload-success: "&aKonfigurasi berhasil dimuat ulang!"
-  give-success: "&aBerhasil memberikan &b%amount% Gems."
-  take-success: "&aBerhasil mengambil &b%amount% Gems."
-  set-success: "&aSaldo Gems berhasil diatur."
+menus:
+  main:
+    title: "&8✦ &bVortexGems"
+    size: 27
+  buy:
+    title: "&8Buy Gems"
+    size: 27
+  categories:
+    title: "&8Exchange Categories"
+    size: 54
+  rewards:
+    title: "&8Exchange: %category%"
+    size: 54
+  admin:
+    title: "&8VortexGems Admin"
+    size: 27
+  category-editor:
+    title: "&8Category Editor"
+    size: 54
+  reward-editor:
+    title: "&8Reward Editor"
+    size: 54
