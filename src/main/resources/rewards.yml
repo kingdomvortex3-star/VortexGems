@@ -1,0 +1,46 @@
+rewards:
+
+  warden_spawner:
+    category: spawner
+    name: "&5Warden Spawner"
+    material: SPAWNER
+    slot: 11
+    amount: 1
+    price: 35
+    enabled: true
+    reward-type: COMMAND
+
+    lore:
+      - "&7Spawner Warden"
+      - ""
+      - "&eHarga: &b35 Gems"
+      - "&aKlik untuk menukarkan!"
+
+    commands:
+      - "spawner give %player% warden 1"
+
+  iron_golem_spawner:
+    category: spawner
+    name: "&fIron Golem Spawner"
+    material: SPAWNER
+    slot: 13
+    amount: 1
+    price: 25
+    enabled: true
+    reward-type: COMMAND
+
+    commands:
+      - "spawner give %player% iron_golem 1"
+
+  legendary_key:
+    category: keys
+    name: "&6Legendary Key"
+    material: TRIPWIRE_HOOK
+    slot: 11
+    amount: 1
+    price: 15
+    enabled: true
+    reward-type: COMMAND
+
+    commands:
+      - "excellentcrates key give %player% legendary 1"
