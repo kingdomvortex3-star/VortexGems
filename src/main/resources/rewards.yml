@@ -1,5 +1,4 @@
 rewards:
-
   warden_spawner:
     category: spawner
     name: "&5Warden Spawner"
@@ -9,12 +8,12 @@ rewards:
     price: 35
     enabled: true
     reward-type: COMMAND
+    commands:
+      - "spawner give %player% warden 1"
     lore:
       - "&7Warden Spawner"
       - ""
       - "&7Harga: &b35 Gems"
-    commands:
-      - "spawner give %player% warden 1"
 
   iron_golem_spawner:
     category: spawner
@@ -25,12 +24,12 @@ rewards:
     price: 25
     enabled: true
     reward-type: COMMAND
+    commands:
+      - "spawner give %player% iron_golem 1"
     lore:
       - "&7Iron Golem Spawner"
       - ""
       - "&7Harga: &b25 Gems"
-    commands:
-      - "spawner give %player% iron_golem 1"
 
   legendary_key:
     category: keys
@@ -41,22 +40,23 @@ rewards:
     price: 15
     enabled: true
     reward-type: COMMAND
+    commands:
+      - "excellentcrates key give %player% legendary 1"
     lore:
       - "&7Legendary Crate Key"
       - ""
       - "&7Harga: &b15 Gems"
-    commands:
-      - "excellentcrates key give %player% legendary 1"
 
   diamond:
     category: items
-    name: "&bDiamond"
+    name: "&bDiamond x16"
     material: DIAMOND
     slot: 11
     amount: 16
     price: 5
     enabled: true
     reward-type: ITEM
+    commands: []
     lore:
       - "&7Diamond x16"
       - ""
