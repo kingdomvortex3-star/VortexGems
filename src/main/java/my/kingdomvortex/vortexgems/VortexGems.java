@@ -1,4 +1,3 @@
-
 package my.kingdomvortex.vortexgems;
 
 import my.kingdomvortex.vortexgems.command.GemsAdminCommand;
@@ -15,12 +14,11 @@ import my.kingdomvortex.vortexgems.manager.LeaderboardManager;
 import my.kingdomvortex.vortexgems.manager.RewardManager;
 import my.kingdomvortex.vortexgems.manager.TransactionManager;
 import my.kingdomvortex.vortexgems.placeholder.GemsExpansion;
-import org.bukkit.Bukkit;
+import my.kingdomvortex.vortexgems.util.InputManager;
+import org.bukkit.command.PluginCommand;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public final class VortexGems extends JavaPlugin {
-
-    private static VortexGems instance;
 
     private ConfigManager configManager;
     private DatabaseManager databaseManager;
@@ -31,27 +29,16 @@ public final class VortexGems extends JavaPlugin {
     private TransactionManager transactionManager;
     private LeaderboardManager leaderboardManager;
     private MenuManager menuManager;
+    private InputManager inputManager;
 
     @Override
     public void onEnable() {
-        instance = this;
-
         saveDefaultConfig();
-        saveResourceIfMissing("categories.yml");
-        saveResourceIfMissing("rewards.yml");
-        saveResourceIfMissing("messages.yml");
+
+        getLogger().info("Starting VortexGems...");
 
         configManager = new ConfigManager(this);
-        configManager.load();
-
         databaseManager = new DatabaseManager(this);
-
-        if (!databaseManager.connect()) {
-            getLogger().severe("Database initialization failed!");
-            Bukkit.getPluginManager().disablePlugin(this);
-            return;
-        }
-
         economyManager = new EconomyManager(this);
         gemsManager = new GemsManager(this);
         categoryManager = new CategoryManager(this);
@@ -59,54 +46,13 @@ public final class VortexGems extends JavaPlugin {
         transactionManager = new TransactionManager(this);
         leaderboardManager = new LeaderboardManager(this);
         menuManager = new MenuManager(this);
+        inputManager = new InputManager(this);
 
         registerCommands();
         registerListeners();
         registerPlaceholder();
 
-        getLogger().info("VortexGems v" + getDescription().getVersion() + " enabled!");
-    }
-
-    private void saveResourceIfMissing(String resource) {
-        if (!getDataFolder().exists()) {
-            getDataFolder().mkdirs();
-        }
-
-        java.io.File file = new java.io.File(getDataFolder(), resource);
-
-        if (!file.exists()) {
-            saveResource(resource, false);
-        }
-    }
-
-    private void registerCommands() {
-        GemsCommand gemsCommand = new GemsCommand(this);
-        GemsAdminCommand adminCommand = new GemsAdminCommand(this);
-
-        getCommand("gems").setExecutor(gemsCommand);
-        getCommand("gems").setTabCompleter(gemsCommand);
-
-        getCommand("gemsadmin").setExecutor(adminCommand);
-        getCommand("gemsadmin").setTabCompleter(adminCommand);
-    }
-
-    private void registerListeners() {
-        Bukkit.getPluginManager().registerEvents(new MenuListener(this), this);
-        Bukkit.getPluginManager().registerEvents(new PlayerListener(this), this);
-    }
-
-    private void registerPlaceholder() {
-        if (Bukkit.getPluginManager().getPlugin("PlaceholderAPI") != null) {
-            new GemsExpansion(this).register();
-            getLogger().info("PlaceholderAPI hooked!");
-        }
-    }
-
-    public void reloadPlugin() {
-        reloadConfig();
-        configManager.load();
-        categoryManager.reload();
-        rewardManager.reload();
+        getLogger().info("VortexGems has been enabled successfully.");
     }
 
     @Override
@@ -115,12 +61,64 @@ public final class VortexGems extends JavaPlugin {
             databaseManager.close();
         }
 
-        getLogger().info("VortexGems disabled.");
-        instance = null;
+        getLogger().info("VortexGems has been disabled.");
     }
 
-    public static VortexGems getInstance() {
-        return instance;
+    private void registerCommands() {
+        PluginCommand gems = getCommand("gems");
+
+        if (gems != null) {
+            GemsCommand executor = new GemsCommand(this);
+            gems.setExecutor(executor);
+            gems.setTabCompleter(executor);
+        } else {
+            getLogger().severe("Command 'gems' is missing from plugin.yml!");
+        }
+
+        PluginCommand admin = getCommand("gemsadmin");
+
+        if (admin != null) {
+            GemsAdminCommand executor = new GemsAdminCommand(this);
+            admin.setExecutor(executor);
+            admin.setTabCompleter(executor);
+        } else {
+            getLogger().severe("Command 'gemsadmin' is missing from plugin.yml!");
+        }
+    }
+
+    private void registerListeners() {
+        getServer().getPluginManager().registerEvents(
+                new MenuListener(this), this
+        );
+
+        getServer().getPluginManager().registerEvents(
+                new PlayerListener(this), this
+        );
+    }
+
+    private void registerPlaceholder() {
+        if (getServer().getPluginManager().getPlugin("PlaceholderAPI") != null) {
+            new GemsExpansion(this).register();
+            getLogger().info("PlaceholderAPI expansion registered.");
+        }
+    }
+
+    public void reloadPlugin() {
+        reloadConfig();
+
+        if (configManager != null) {
+            configManager.reload();
+        }
+
+        if (categoryManager != null) {
+            categoryManager.reload();
+        }
+
+        if (rewardManager != null) {
+            rewardManager.reload();
+        }
+
+        getLogger().info("Configuration reloaded.");
     }
 
     public ConfigManager getConfigManager() {
@@ -158,4 +156,8 @@ public final class VortexGems extends JavaPlugin {
     public MenuManager getMenuManager() {
         return menuManager;
     }
-}
+
+    public InputManager getInputManager() {
+        return inputManager;
+    }
+    }
