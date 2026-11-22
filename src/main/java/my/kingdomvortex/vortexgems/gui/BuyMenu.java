@@ -35,7 +35,7 @@ public final class BuyMenu {
                 size,
                 ColorUtil.text(config.getString(
                         "gui.buy.title",
-                        "<dark_gray>Buy Gems"
+                        "<dark_gray>ᴠᴏʀᴛᴇx ɢᴇᴍѕ | ʙᴜʏ"
                 ))
         );
 
@@ -50,37 +50,39 @@ public final class BuyMenu {
 
         double price = plugin.getEconomyManager().getPricePerGem();
 
+        long balance = plugin.getGemsManager()
+                .getBalance(player.getUniqueId());
+
         inventory.setItem(13, ItemUtil.create(
                 Material.EMERALD,
                 1,
-                "<green><bold>BUY GEMS</bold>",
+                "<gradient:#55ff55:#00aaaa><bold>ʙᴜʏ ɢᴇᴍѕ</bold></gradient>",
                 List.of(
                         "",
-                        "<gray>Your balance: <aqua>" +
-                                ColorUtil.format(plugin.getGemsManager()
-                                        .getBalance(player.getUniqueId())),
-                        "<gray>Price per Gem: <gold>" +
+                        "<gray>ʏᴏᴜʀ ʙᴀʟᴀɴᴄᴇ: <aqua>" +
+                                ColorUtil.format(balance) + " ɢᴇᴍѕ",
+                        "<gray>ᴘʀɪᴄᴇ ᴘᴇʀ ɢᴇᴍ: <gold>" +
                                 String.format("%,.2f", price),
                         "",
                         enabled
-                                ? "<green>Purchasing is available."
-                                : "<red>Purchasing is unavailable."
+                                ? "<green>ᴘᴜʀᴄʜᴀѕɪɴɢ ɪѕ ᴀᴠᴀɪʟᴀʙʟᴇ"
+                                : "<red>ᴘᴜʀᴄʜᴀѕɪɴɢ ɪѕ ᴜɴᴀᴠᴀɪʟᴀʙʟᴇ"
                 )
         ));
 
-        addPurchase(inventory, 20, 10, 20, price, enabled);
-        addPurchase(inventory, 22, 50, 50, price, enabled);
-        addPurchase(inventory, 24, 100, 100, price, enabled);
-        addPurchase(inventory, 30, 500, 500, price, enabled);
-        addPurchase(inventory, 32, 1000, 1000, price, enabled);
+        addPurchase(inventory, 20, 10, price, enabled);
+        addPurchase(inventory, 22, 50, price, enabled);
+        addPurchase(inventory, 24, 100, price, enabled);
+        addPurchase(inventory, 30, 500, price, enabled);
+        addPurchase(inventory, 32, 1000, price, enabled);
 
         inventory.setItem(size - 5, ItemUtil.create(
                 Material.ARROW,
                 1,
-                "<yellow><bold>BACK</bold>",
+                "<yellow><bold>ʙᴀᴄᴋ</bold>",
                 List.of(
                         "",
-                        "<gray>Return to main menu."
+                        "<gray>ʀᴇᴛᴜʀɴ ᴛᴏ ᴍᴀɪɴ ᴍᴇɴᴜ"
                 )
         ));
 
@@ -91,28 +93,27 @@ public final class BuyMenu {
             Inventory inventory,
             int slot,
             long amount,
-            long priceAmount,
             double pricePerGem,
             boolean enabled
     ) {
-        double total = pricePerGem * priceAmount;
+        double total = pricePerGem * amount;
 
         inventory.setItem(slot, ItemUtil.create(
                 enabled ? Material.EMERALD_BLOCK : Material.BARRIER,
                 1,
                 enabled
-                        ? "<green><bold>" + amount + " GEMS</bold>"
-                        : "<red><bold>UNAVAILABLE</bold>",
+                        ? "<green><bold>" + amount + " ɢᴇᴍѕ</bold>"
+                        : "<red><bold>ᴜɴᴀᴠᴀɪʟᴀʙʟᴇ</bold>",
                 List.of(
                         "",
-                        "<gray>Receive: <aqua>" +
-                                ColorUtil.format(amount) + " Gems",
-                        "<gray>Cost: <gold>" +
+                        "<gray>ʀᴇᴄᴇɪᴠᴇ: <aqua>" +
+                                ColorUtil.format(amount) + " ɢᴇᴍѕ",
+                        "<gray>ᴄᴏѕᴛ: <gold>" +
                                 String.format("%,.2f", total),
                         "",
                         enabled
-                                ? "<yellow>Click to purchase"
-                                : "<red>Buying is disabled"
+                                ? "<yellow>ᴄʟɪᴄᴋ ᴛᴏ ᴘᴜʀᴄʜᴀѕᴇ"
+                                : "<red>ʙᴜʏɪɴɢ ɪѕ ᴅɪѕᴀʙʟᴇᴅ"
                 )
         ));
     }
