@@ -3,7 +3,6 @@ package my.kingdomvortex.vortexgems.gui;
 
 import my.kingdomvortex.vortexgems.VortexGems;
 import my.kingdomvortex.vortexgems.util.ItemUtil;
-import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -26,44 +25,33 @@ public final class RewardEditorMenu {
         Inventory inventory = Bukkit.createInventory(
                 holder,
                 54,
-                Component.text("VORTEX - REWARD MANAGER")
+                "VORTEX - REWARD MANAGER"
         );
 
         holder.setInventory(inventory);
 
-        for (int slot = 0; slot < 54; slot++) {
-            inventory.setItem(slot, ItemUtil.filler());
-        }
+        fill(inventory);
 
         int slot = 0;
 
-        for (String id : plugin.getRewardManager().getRewardIds()) {
+        for (String category : plugin.getCategoryManager().getCategoryIds()) {
             if (slot >= 45) {
                 break;
             }
 
-            var manager = plugin.getRewardManager();
-
-            List<String> lore = new ArrayList<>();
-            lore.add("");
-            lore.add("<gray>ID: <white>" + id);
-            lore.add("<gray>Category: <aqua>" + manager.getCategory(id));
-            lore.add("<gray>Type: <white>" + manager.getType(id));
-            lore.add("<gray>Amount: <white>" + manager.getAmount(id));
-            lore.add("<gray>Price: <gold>" + manager.getPrice(id) + " Gems");
-            lore.add("<gray>Status: " + (manager.isEnabled(id)
-                    ? "<green>Enabled"
-                    : "<red>Disabled"));
-            lore.add("");
-            lore.add("<yellow>Reward configuration");
-
-            Material material = manager.getMaterial(id);
-
             inventory.setItem(slot++, ItemUtil.create(
-                    material == null ? Material.CHEST : material,
+                    plugin.getCategoryManager().getMaterial(category),
                     1,
-                    manager.getName(id),
-                    lore
+                    plugin.getCategoryManager().getName(category),
+                    List.of(
+                            "",
+                            "<gray>Category: <white>" + category,
+                            "<gray>Rewards: <aqua>" +
+                                    plugin.getRewardManager()
+                                            .getRewardsInCategory(category).size(),
+                            "",
+                            "<yellow>Click to manage rewards"
+                    )
             ));
         }
 
@@ -73,9 +61,10 @@ public final class RewardEditorMenu {
                 "<green><bold>CREATE REWARD</bold>",
                 List.of(
                         "",
-                        "<gray>Create a new shop reward.",
+                        "<gray>Select a category first.",
+                        "<gray>Then place an item into the editor.",
                         "",
-                        "<yellow>Use /gemsadmin reward create"
+                        "<yellow>Click to begin"
                 )
         ));
 
@@ -90,5 +79,114 @@ public final class RewardEditorMenu {
         ));
 
         player.openInventory(inventory);
+    }
+
+    public void openCategory(Player player, String category) {
+        if (!plugin.getCategoryManager().exists(category)) {
+            player.sendMessage(
+                    "§cCategory does not exist."
+            );
+            open(player);
+            return;
+        }
+
+        MenuHolder holder = new MenuHolder(
+                "REWARD_CATEGORY",
+                category
+        );
+
+        Inventory inventory = Bukkit.createInventory(
+                holder,
+                54,
+                "VORTEX - " + category.toUpperCase()
+        );
+
+        holder.setInventory(inventory);
+
+        fill(inventory);
+
+        for (String id : plugin.getRewardManager()
+                .getRewardIds()) {
+
+            if (!plugin.getRewardManager()
+                    .getCategory(id).equalsIgnoreCase(category)) {
+                continue;
+            }
+
+            int slot = plugin.getRewardManager().getSlot(id);
+
+            if (slot < 0 || slot >= 45) {
+                continue;
+            }
+
+            var item = plugin.getRewardManager().getItemStack(id);
+
+            if (item == null) {
+                item = new org.bukkit.inventory.ItemStack(
+                        plugin.getRewardManager().getMaterial(id)
+                );
+            }
+
+            List<String> lore = new ArrayList<>();
+            lore.add("");
+            lore.add("<gray>ID: <white>" + id);
+            lore.add("<gray>Price: <gold>" +
+                    plugin.getRewardManager().getPrice(id) + " Gems");
+            lore.add("<gray>Status: " +
+                    (plugin.getRewardManager().isEnabled(id)
+                            ? "<green>Enabled"
+                            : "<red>Disabled"));
+            lore.add("");
+            lore.add("<yellow>Left-click: Toggle");
+            lore.add("<red>Right-click: Delete");
+
+            org.bukkit.inventory.ItemStack display = item.clone();
+
+            org.bukkit.inventory.meta.ItemMeta meta =
+                    display.getItemMeta();
+
+            if (meta != null) {
+                meta.displayName(
+                        my.kingdomvortex.vortexgems.util.ColorUtil.text(
+                                plugin.getRewardManager().getName(id)
+                        )
+                );
+
+                meta.lore(
+                        my.kingdomvortex.vortexgems.util.ColorUtil.lore(lore)
+                );
+
+                display.setItemMeta(meta);
+            }
+
+            inventory.setItem(slot, display);
+        }
+
+        inventory.setItem(45, ItemUtil.create(
+                Material.LIME_DYE,
+                1,
+                "<green><bold>ADD REWARD</bold>",
+                List.of(
+                        "",
+                        "<gray>Add an item from your inventory.",
+                        "",
+                        "<yellow>Click to add"
+                )
+        ));
+
+        inventory.setItem(49, ItemUtil.create(
+                Material.ARROW,
+                1,
+                "<yellow><bold>BACK</bold>",
+                List.of()
+        ));
+
+        player.openInventory(inventory);
+    }
+
+    private void fill(Inventory inventory) {
+        for (int slot = 0; slot < inventory.getSize(); slot++) {
+            inventory.setItem(slot, ItemUtil.filler());
+        }
     }
 }
