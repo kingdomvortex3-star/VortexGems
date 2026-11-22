@@ -25,8 +25,8 @@ public final class RewardManager {
     }
 
     public Set<String> getRewardIds() {
-        ConfigurationSection section =
-                getConfig().getConfigurationSection("rewards");
+        ConfigurationSection section = getConfig()
+                .getConfigurationSection("rewards");
 
         return section == null ? Set.of() : section.getKeys(false);
     }
@@ -62,10 +62,10 @@ public final class RewardManager {
     }
 
     public Material getMaterial(String id) {
-        ItemStack item = getItemStack(id);
+        ItemStack stored = getItemStack(id);
 
-        if (item != null) {
-            return item.getType();
+        if (stored != null) {
+            return stored.getType();
         }
 
         Material material = Material.matchMaterial(
@@ -76,10 +76,10 @@ public final class RewardManager {
     }
 
     public int getAmount(String id) {
-        ItemStack item = getItemStack(id);
+        ItemStack stored = getItemStack(id);
 
-        if (item != null) {
-            return item.getAmount();
+        if (stored != null) {
+            return stored.getAmount();
         }
 
         return Math.max(1, Math.min(
@@ -89,8 +89,10 @@ public final class RewardManager {
     }
 
     public long getPrice(String id) {
-        return Math.max(0,
-                getConfig().getLong("rewards." + id + ".price", 0));
+        return Math.max(
+                0,
+                getConfig().getLong("rewards." + id + ".price", 0)
+        );
     }
 
     public int getSlot(String id) {
@@ -99,7 +101,8 @@ public final class RewardManager {
 
     public String getType(String id) {
         return getConfig().getString(
-                "rewards." + id + ".type", "ITEM"
+                "rewards." + id + ".type",
+                "ITEM"
         ).toUpperCase();
     }
 
@@ -120,7 +123,9 @@ public final class RewardManager {
             return null;
         }
 
-        Object value = getConfig().get("rewards." + id + ".item");
+        Object value = getConfig().get(
+                "rewards." + id + ".item"
+        );
 
         if (value instanceof ItemStack item && !item.getType().isAir()) {
             return item.clone();
@@ -128,7 +133,8 @@ public final class RewardManager {
 
         Material material = Material.matchMaterial(
                 getConfig().getString(
-                        "rewards." + id + ".material", "CHEST"
+                        "rewards." + id + ".material",
+                        "CHEST"
                 )
         );
 
@@ -144,28 +150,41 @@ public final class RewardManager {
         return new ItemStack(material, amount);
     }
 
+    /**
+     * Finds an available slot in the selected category.
+     * The back button slot is reserved automatically.
+     *
+     * @return available slot, or -1 if the category is full
+     */
     public int getNextAvailableSlot(String category) {
+        if (category == null
+                || !plugin.getCategoryManager().exists(category)) {
+            return -1;
+        }
+
         int size = plugin.getConfig().getInt("gui.reward.size", 54);
 
         if (size < 9 || size > 54 || size % 9 != 0) {
             size = 54;
         }
 
-        int backSlot = size - 5;
+        int reservedSlot = size - 5;
         Set<Integer> occupied = new HashSet<>();
 
         for (String id : getRewardIds()) {
             if (getCategory(id).equalsIgnoreCase(category)) {
-                occupied.add(getSlot(id));
+                int usedSlot = getSlot(id);
+
+                if (usedSlot >= 0 && usedSlot < size) {
+                    occupied.add(usedSlot);
+                }
             }
         }
 
         for (int slot = 0; slot < size; slot++) {
-            if (slot == backSlot || occupied.contains(slot)) {
-                continue;
+            if (slot != reservedSlot && !occupied.contains(slot)) {
+                return slot;
             }
-
-            return slot;
         }
 
         return -1;
@@ -192,27 +211,41 @@ public final class RewardManager {
             return false;
         }
 
-        for (String existing : getRewardIds()) {
-            if (getCategory(existing).equalsIgnoreCase(category)
-                    && getSlot(existing) == slot) {
+        int menuSize = plugin.getConfig().getInt("gui.reward.size", 54);
+
+        if (menuSize < 9 || menuSize > 54 || menuSize % 9 != 0) {
+            menuSize = 54;
+        }
+
+        if (slot >= menuSize || slot == menuSize - 5) {
+            return false;
+        }
+
+        for (String existingId : getRewardIds()) {
+            if (getCategory(existingId).equalsIgnoreCase(category)
+                    && getSlot(existingId) == slot) {
                 return false;
             }
         }
 
-        ItemStack stored = item.clone();
+        ItemStack storedItem = item.clone();
+
         String path = "rewards." + id;
 
         getConfig().set(path + ".enabled", true);
         getConfig().set(path + ".category", category);
-        getConfig().set(path + ".name", stored.getType().name());
-        getConfig().set(path + ".material", stored.getType().name());
-        getConfig().set(path + ".amount", stored.getAmount());
+        getConfig().set(path + ".name", storedItem.getType().name());
+        getConfig().set(path + ".material", storedItem.getType().name());
+        getConfig().set(path + ".amount", storedItem.getAmount());
         getConfig().set(path + ".price", price);
         getConfig().set(path + ".slot", slot);
         getConfig().set(path + ".type", "ITEM");
-        getConfig().set(path + ".item", stored);
+        getConfig().set(path + ".item", storedItem);
         getConfig().set(path + ".commands", List.of());
-        getConfig().set(path + ".lore", List.of());
+        getConfig().set(path + ".lore", List.of(
+                "",
+                "<gray>Click to purchase."
+        ));
 
         plugin.getConfigManager().saveRewards();
         return true;
@@ -227,10 +260,16 @@ public final class RewardManager {
             long price,
             int slot
     ) {
-        if (id == null || !id.matches("[a-zA-Z0-9_-]+")
-                || exists(id)
-                || !plugin.getCategoryManager().exists(category)
-                || material == null
+        if (id == null || !id.matches("[a-zA-Z0-9_-]+")) {
+            return false;
+        }
+
+        if (exists(id)
+                || !plugin.getCategoryManager().exists(category)) {
+            return false;
+        }
+
+        if (material == null
                 || material.isAir()
                 || amount < 1
                 || amount > 64
@@ -240,8 +279,25 @@ public final class RewardManager {
             return false;
         }
 
-        ItemStack item = new ItemStack(material, amount);
-        return createItemReward(id, category, item, price, slot);
+        String path = "rewards." + id;
+
+        getConfig().set(path + ".enabled", true);
+        getConfig().set(path + ".category", category);
+        getConfig().set(path + ".name", name);
+        getConfig().set(path + ".material", material.name());
+        getConfig().set(path + ".amount", amount);
+        getConfig().set(path + ".price", price);
+        getConfig().set(path + ".slot", slot);
+        getConfig().set(path + ".type", "ITEM");
+        getConfig().set(path + ".item", new ItemStack(material, amount));
+        getConfig().set(path + ".commands", List.of());
+        getConfig().set(path + ".lore", List.of(
+                "",
+                "<gray>Click to purchase."
+        ));
+
+        plugin.getConfigManager().saveRewards();
+        return true;
     }
 
     public boolean delete(String id) {
@@ -275,19 +331,38 @@ public final class RewardManager {
             return false;
         }
 
-        return setItemStack(id, new ItemStack(material, getAmount(id)));
+        if (!setValue(id, "material", material.name())) {
+            return false;
+        }
+
+        return setValue(
+                id,
+                "item",
+                new ItemStack(
+                        material,
+                        getAmount(id)
+                )
+        );
     }
 
     public boolean setItemStack(String id, ItemStack item) {
-        if (!exists(id) || item == null || item.getType().isAir()) {
+        if (!exists(id)
+                || item == null
+                || item.getType().isAir()) {
             return false;
         }
 
         ItemStack stored = item.clone();
 
         getConfig().set("rewards." + id + ".item", stored);
-        getConfig().set("rewards." + id + ".material", stored.getType().name());
-        getConfig().set("rewards." + id + ".amount", stored.getAmount());
+        getConfig().set(
+                "rewards." + id + ".material",
+                stored.getType().name()
+        );
+        getConfig().set(
+                "rewards." + id + ".amount",
+                stored.getAmount()
+        );
 
         plugin.getConfigManager().saveRewards();
         return true;
@@ -311,23 +386,16 @@ public final class RewardManager {
     }
 
     public boolean setPrice(String id, long price) {
-        return price >= 0 && setValue(id, "price", price);
-    }
-
-    public boolean setSlot(String id, int slot) {
-        if (slot < 0 || slot >= 54 || !exists(id)) {
+        if (price < 0) {
             return false;
         }
 
-        for (String other : getRewardIds()) {
-            if (other.equalsIgnoreCase(id)) {
-                continue;
-            }
+        return setValue(id, "price", price);
+    }
 
-            if (getCategory(other).equalsIgnoreCase(getCategory(id))
-                    && getSlot(other) == slot) {
-                return false;
-            }
+    public boolean setSlot(String id, int slot) {
+        if (slot < 0 || slot >= 54) {
+            return false;
         }
 
         return setValue(id, "slot", slot);
