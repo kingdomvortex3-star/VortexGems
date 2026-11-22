@@ -1,8 +1,9 @@
+
 package my.kingdomvortex.vortexgems.gui;
 
 import my.kingdomvortex.vortexgems.VortexGems;
-import my.kingdomvortex.vortexgems.util.ColorUtil;
 import my.kingdomvortex.vortexgems.util.ItemUtil;
+import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -25,7 +26,7 @@ public final class RewardEditorMenu {
         Inventory inventory = Bukkit.createInventory(
                 holder,
                 54,
-                ColorUtil.text("<dark_gray>VORTEX - REWARD MANAGER")
+                Component.text("VORTEX - REWARD MANAGER")
         );
 
         holder.setInventory(inventory);
@@ -34,42 +35,34 @@ public final class RewardEditorMenu {
             inventory.setItem(slot, ItemUtil.filler());
         }
 
-        List<String> rewardIds = new ArrayList<>(
-                plugin.getRewardManager().getRewardIds()
-        );
+        int slot = 0;
 
-        int displaySlot = 0;
-
-        for (String id : rewardIds) {
-            if (displaySlot >= 45) {
+        for (String id : plugin.getRewardManager().getRewardIds()) {
+            if (slot >= 45) {
                 break;
             }
 
-            String name = plugin.getRewardManager().getName(id);
-            String category = plugin.getRewardManager().getCategory(id);
-            Material material = plugin.getRewardManager().getMaterial(id);
-            int amount = plugin.getRewardManager().getAmount(id);
-            long price = plugin.getRewardManager().getPrice(id);
-            String type = plugin.getRewardManager().getType(id);
-            boolean enabled = plugin.getRewardManager().isEnabled(id);
+            var manager = plugin.getRewardManager();
 
             List<String> lore = new ArrayList<>();
             lore.add("");
             lore.add("<gray>ID: <white>" + id);
-            lore.add("<gray>Category: <white>" + category);
-            lore.add("<gray>Type: <white>" + type);
-            lore.add("<gray>Amount: <white>" + amount);
-            lore.add("<gray>Price: <aqua>" + ColorUtil.formatGems(price));
-            lore.add("<gray>Status: " +
-                    (enabled ? "<green>Enabled" : "<red>Disabled"));
+            lore.add("<gray>Category: <aqua>" + manager.getCategory(id));
+            lore.add("<gray>Type: <white>" + manager.getType(id));
+            lore.add("<gray>Amount: <white>" + manager.getAmount(id));
+            lore.add("<gray>Price: <gold>" + manager.getPrice(id) + " Gems");
+            lore.add("<gray>Status: " + (manager.isEnabled(id)
+                    ? "<green>Enabled"
+                    : "<red>Disabled"));
             lore.add("");
-            lore.add("<yellow>Left-click: Edit");
-            lore.add("<red>Right-click: Delete");
+            lore.add("<yellow>Reward configuration");
 
-            inventory.setItem(displaySlot++, ItemUtil.create(
-                    material,
-                    amount,
-                    name,
+            Material material = manager.getMaterial(id);
+
+            inventory.setItem(slot++, ItemUtil.create(
+                    material == null ? Material.CHEST : material,
+                    1,
+                    manager.getName(id),
                     lore
             ));
         }
@@ -82,7 +75,7 @@ public final class RewardEditorMenu {
                         "",
                         "<gray>Create a new shop reward.",
                         "",
-                        "<yellow>Click to create"
+                        "<yellow>Use /gemsadmin reward create"
                 )
         ));
 
