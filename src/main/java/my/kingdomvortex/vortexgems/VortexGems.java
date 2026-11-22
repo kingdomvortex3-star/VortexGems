@@ -33,12 +33,24 @@ public final class VortexGems extends JavaPlugin {
 
     @Override
     public void onEnable() {
-        saveDefaultConfig();
-
         getLogger().info("Starting VortexGems...");
 
+        saveDefaultConfig();
+        saveResourceIfMissing("categories.yml");
+        saveResourceIfMissing("rewards.yml");
+        saveResourceIfMissing("messages.yml");
+
         configManager = new ConfigManager(this);
+        configManager.load();
+
         databaseManager = new DatabaseManager(this);
+
+        if (!databaseManager.connect()) {
+            getLogger().severe("VortexGems could not connect to SQLite.");
+            getServer().getPluginManager().disablePlugin(this);
+            return;
+        }
+
         economyManager = new EconomyManager(this);
         gemsManager = new GemsManager(this);
         categoryManager = new CategoryManager(this);
@@ -53,6 +65,16 @@ public final class VortexGems extends JavaPlugin {
         registerPlaceholder();
 
         getLogger().info("VortexGems enabled successfully.");
+    }
+
+    private void saveResourceIfMissing(String fileName) {
+        if (!getDataFolder().exists()) {
+            getDataFolder().mkdirs();
+        }
+
+        if (!new java.io.File(getDataFolder(), fileName).exists()) {
+            saveResource(fileName, false);
+        }
     }
 
     @Override
