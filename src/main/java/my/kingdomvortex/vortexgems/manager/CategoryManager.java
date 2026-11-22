@@ -23,8 +23,8 @@ public final class CategoryManager {
     }
 
     public Set<String> getCategoryIds() {
-        ConfigurationSection section = getConfig()
-                .getConfigurationSection("categories");
+        ConfigurationSection section =
+                getConfig().getConfigurationSection("categories");
 
         return section == null ? Set.of() : section.getKeys(false);
     }
@@ -46,8 +46,8 @@ public final class CategoryManager {
     }
 
     public boolean isEnabled(String id) {
-        return exists(id) &&
-                getConfig().getBoolean("categories." + id + ".enabled", false);
+        return exists(id)
+                && getConfig().getBoolean("categories." + id + ".enabled", false);
     }
 
     public String getName(String id) {
@@ -55,17 +55,18 @@ public final class CategoryManager {
     }
 
     public Material getMaterial(String id) {
-        String value = getConfig().getString(
-                "categories." + id + ".material", "CHEST"
+        Material material = Material.matchMaterial(
+                getConfig().getString("categories." + id + ".material", "CHEST")
         );
 
-        Material material = Material.matchMaterial(value);
         return material == null ? Material.CHEST : material;
     }
 
     public int getAmount(String id) {
-        return Math.max(1, Math.min(64,
-                getConfig().getInt("categories." + id + ".amount", 1)));
+        return Math.max(1, Math.min(
+                64,
+                getConfig().getInt("categories." + id + ".amount", 1)
+        ));
     }
 
     public int getSlot(String id) {
@@ -82,26 +83,24 @@ public final class CategoryManager {
             Material material,
             int slot
     ) {
-        if (id == null || !id.matches("[a-zA-Z0-9_-]+")) {
-            return false;
-        }
-
-        if (exists(id) || material == null || slot < 0 || slot >= 54) {
+        if (id == null
+                || !id.matches("[a-zA-Z0-9_-]+")
+                || exists(id)
+                || material == null
+                || material.isAir()
+                || slot < 0
+                || slot >= 54) {
             return false;
         }
 
         String path = "categories." + id;
-        FileConfiguration config = getConfig();
 
-        config.set(path + ".enabled", true);
-        config.set(path + ".name", name);
-        config.set(path + ".material", material.name());
-        config.set(path + ".amount", 1);
-        config.set(path + ".slot", slot);
-        config.set(path + ".lore", List.of(
-                "",
-                "<gray>Click to open this category."
-        ));
+        getConfig().set(path + ".enabled", true);
+        getConfig().set(path + ".name", name);
+        getConfig().set(path + ".material", material.name());
+        getConfig().set(path + ".amount", 1);
+        getConfig().set(path + ".slot", slot);
+        getConfig().set(path + ".lore", List.of());
 
         plugin.getConfigManager().saveCategories();
         return true;
@@ -126,12 +125,18 @@ public final class CategoryManager {
     }
 
     public boolean setMaterial(String id, Material material) {
-        if (material == null) return false;
+        if (material == null || material.isAir()) {
+            return false;
+        }
+
         return setValue(id, "material", material.name());
     }
 
     public boolean setSlot(String id, int slot) {
-        if (slot < 0 || slot >= 54) return false;
+        if (slot < 0 || slot >= 54) {
+            return false;
+        }
+
         return setValue(id, "slot", slot);
     }
 
