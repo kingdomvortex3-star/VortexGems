@@ -1,26 +1,71 @@
+
 prefix: "&8[&bVortexGems&8] &7"
 
 no-permission: "&cKamu tidak memiliki permission!"
-player-only: "&cCommand ini hanya bisa digunakan player."
-invalid-amount: "&cJumlah Gems tidak valid."
+player-only: "&cCommand ini hanya untuk player."
+invalid-amount: "&cJumlah tidak valid."
 player-not-found: "&cPlayer tidak ditemukan."
 not-enough-money: "&cUang kamu tidak cukup!"
 not-enough-gems: "&cGems kamu tidak cukup!"
-
 purchase-success: "&aBerhasil membeli &b%amount% Gems&a!"
 exchange-success: "&aBerhasil menukarkan &e%reward%&a!"
 balance: "&7Saldo Gems: &b%balance% ✦"
-
-give-success: "&aBerhasil memberikan &b%amount% Gems &akepada &e%player%."
-take-success: "&aBerhasil mengambil &b%amount% Gems &adari &e%player%."
-set-success: "&aSaldo Gems &e%player% &aberhasil diubah menjadi &b%amount%."
-
-reload-success: "&aKonfigurasi VortexGems berhasil dimuat ulang!"
+give-success: "&aMemberikan &b%amount% Gems &akepada &e%player%."
+take-success: "&aMengambil &b%amount% Gems &adari &e%player%."
+set-success: "&aSaldo &e%player% &aberhasil diatur."
+reload-success: "&aKonfigurasi berhasil dimuat ulang!"
+config-saved: "&aKonfigurasi berhasil disimpan!"
 category-created: "&aKategori berhasil dibuat!"
 category-deleted: "&aKategori berhasil dihapus!"
 category-updated: "&aKategori berhasil diperbarui!"
 reward-created: "&aHadiah berhasil dibuat!"
 reward-deleted: "&aHadiah berhasil dihapus!"
 reward-updated: "&aHadiah berhasil diperbarui!"
+inventory-full: "&cInventory kamu tidak cukup!"
+purchase-confirm: "&eKlik sekali lagi untuk mengonfirmasi pembelian."
+exchange-confirm: "&eKlik sekali lagi untuk mengonfirmasi penukaran."
+```
 
-config-saved: "&aKonfigurasi berhasil disimpan!"
+**`src/main/resources/categories.yml`**
+
+<CodeBlock language="yaml" editable>
+categories:
+  spawner:
+    name: "&bSpawner"
+    material: SPAWNER
+    slot: 11
+    enabled: true
+    lore:
+      - "&7Tukarkan Gems menjadi Spawner."
+      - ""
+      - "&eKlik untuk membuka!"
+
+  keys:
+    name: "&6Keys"
+    material: TRIPWIRE_HOOK
+    slot: 13
+    enabled: true
+    lore:
+      - "&7Tukarkan Gems menjadi Crate Keys."
+      - ""
+      - "&eKlik untuk membuka!"
+
+  items:
+    name: "&aItems"
+    material: DIAMOND
+    slot: 15
+    enabled: true
+    lore:
+      - "&7Tukarkan Gems menjadi Items."
+      - ""
+      - "&eKlik untuk membuka!"
+
+  others:
+    name: "&dOthers"
+    material: ENCHANTED_BOOK
+    slot: 22
+    enabled: true
+    lore:
+      - "&7Hadiah lainnya."
+      - ""
+      - "&eKlik untuk membuka!"
