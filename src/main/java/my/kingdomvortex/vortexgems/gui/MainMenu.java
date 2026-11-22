@@ -2,7 +2,6 @@
 package my.kingdomvortex.vortexgems.gui;
 
 import my.kingdomvortex.vortexgems.VortexGems;
-import my.kingdomvortex.vortexgems.manager.LeaderboardManager;
 import my.kingdomvortex.vortexgems.util.ColorUtil;
 import my.kingdomvortex.vortexgems.util.ItemUtil;
 import org.bukkit.Bukkit;
@@ -11,7 +10,6 @@ import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public final class MainMenu {
@@ -32,7 +30,7 @@ public final class MainMenu {
 
         String title = config.getString(
                 "gui.main.title",
-                "<dark_gray><bold>VORTEX GEMS</bold>"
+                "<dark_gray>ᴠᴏʀᴛᴇx ɢᴇᴍѕ"
         );
 
         MenuHolder holder = new MenuHolder("MAIN");
@@ -49,134 +47,74 @@ public final class MainMenu {
             inventory.setItem(slot, ItemUtil.filler());
         }
 
-        int balanceSlot = getSlot(config, "gui.main.balance-slot", 4, size);
-        int buySlot = getSlot(config, "gui.main.buy-slot", 20, size);
-        int shopSlot = getSlot(config, "gui.main.shop-slot", 22, size);
-        int leaderboardSlot = getSlot(
-                config,
-                "gui.main.leaderboard-slot",
-                24,
-                size
-        );
-        int closeSlot = getSlot(config, "gui.main.close-slot", 40, size);
+        long balance = plugin.getGemsManager()
+                .getBalance(player.getUniqueId());
 
-        long balance = plugin.getGemsManager().getBalance(
-                player.getUniqueId()
-        );
-
-        inventory.setItem(balanceSlot, ItemUtil.create(
+        inventory.setItem(4, ItemUtil.create(
                 Material.EMERALD,
                 1,
-                "<gradient:#00E5FF:#7B61FF><bold>YOUR GEMS</bold></gradient>",
+                "<gradient:#55ff55:#00aaaa><bold>ᴠᴏʀᴛᴇx ɢᴇᴍѕ</bold></gradient>",
                 List.of(
                         "",
-                        "<gray>Player: <white>" + player.getName(),
-                        "<gray>Balance: <aqua>" + ColorUtil.formatGems(balance),
+                        "<gray>ᴘʀᴇᴍɪᴜᴍ ɢᴇᴍѕ ѕʏѕᴛᴇᴍ",
                         "",
-                        "<yellow>Your current Gems balance."
+                        "<gray>ᴘʟᴀʏᴇʀ: <white>" + player.getName(),
+                        "<gray>ʏᴏᴜʀ ʙᴀʟᴀɴᴄᴇ: <aqua>" +
+                                ColorUtil.format(balance) + " ɢᴇᴍѕ",
+                        "",
+                        "<dark_gray>ᴠᴏʀᴛᴇx ɴᴇᴛᴡᴏʀᴋ"
                 )
         ));
 
-        inventory.setItem(buySlot, ItemUtil.create(
+        inventory.setItem(20, ItemUtil.create(
                 Material.GOLD_INGOT,
                 1,
-                "<gold><bold>BUY GEMS</bold>",
+                "<gold><bold>ʙᴜʏ ɢᴇᴍѕ</bold>",
                 List.of(
                         "",
-                        "<gray>Purchase Gems using server money.",
-                        "<gray>Price per Gem: <gold>" +
-                                ColorUtil.format(
-                                        (long) plugin.getEconomyManager()
-                                                .getPricePerGem()
-                                ),
+                        "<gray>ᴘᴜʀᴄʜᴀѕᴇ ɢᴇᴍѕ ᴜѕɪɴɢ",
+                        "<gray>ᴛʜᴇ ѕᴇʀᴠᴇʀ ᴇᴄᴏɴᴏᴍʏ.",
                         "",
-                        "<yellow>Click to open purchase menu."
+                        "<yellow>ᴄʟɪᴄᴋ ᴛᴏ ᴏᴘᴇɴ"
                 )
         ));
 
-        inventory.setItem(shopSlot, ItemUtil.create(
+        inventory.setItem(22, ItemUtil.create(
                 Material.CHEST,
                 1,
-                "<aqua><bold>GEMS SHOP</bold>",
+                "<aqua><bold>ɢᴇᴍѕ ѕʜᴏᴘ</bold>",
                 List.of(
                         "",
-                        "<gray>Browse available rewards.",
-                        "<gray>Spend your Gems on exclusive items.",
+                        "<gray>ʙʀᴏᴡѕᴇ ᴄᴀᴛᴇɢᴏʀɪᴇѕ",
+                        "<gray>ᴀɴᴅ ᴘᴜʀᴄʜᴀѕᴇ ʀᴇᴡᴀʀᴅѕ.",
                         "",
-                        "<yellow>Click to browse categories."
+                        "<yellow>ᴄʟɪᴄᴋ ᴛᴏ ᴏᴘᴇɴ"
                 )
         ));
 
-        List<String> leaderboardLore = new ArrayList<>();
-        leaderboardLore.add("");
-        leaderboardLore.add("<gray>Top Gems holders:");
-        leaderboardLore.add("");
-
-        if (config.getBoolean("settings.leaderboard.enabled", true)) {
-            int limit = Math.max(
-                    1,
-                    Math.min(
-                            10,
-                            config.getInt("settings.leaderboard.limit", 10)
-                    )
-            );
-
-            List<LeaderboardManager.Entry> entries =
-                    plugin.getLeaderboardManager().getTop(limit);
-
-            if (entries.isEmpty()) {
-                leaderboardLore.add("<dark_gray>No leaderboard data yet.");
-            } else {
-                int rank = 1;
-
-                for (LeaderboardManager.Entry entry : entries) {
-                    leaderboardLore.add(
-                            "<yellow>" + rank++ + ". <white>" +
-                                    entry.getName() +
-                                    " <dark_gray>» <aqua>" +
-                                    ColorUtil.format(entry.getBalance())
-                    );
-                }
-            }
-        } else {
-            leaderboardLore.add("<red>Leaderboard is disabled.");
-        }
-
-        leaderboardLore.add("");
-        leaderboardLore.add("<gray>Leaderboard overview.");
-
-        inventory.setItem(leaderboardSlot, ItemUtil.create(
-                Material.GOLDEN_HELMET,
+        inventory.setItem(24, ItemUtil.create(
+                Material.COMPASS,
                 1,
-                "<gold><bold>GEMS LEADERBOARD</bold>",
-                leaderboardLore
-        ));
-
-        inventory.setItem(closeSlot, ItemUtil.create(
-                Material.BARRIER,
-                1,
-                "<red><bold>CLOSE</bold>",
+                "<light_purple><bold>ᴀᴅᴍɪɴ ᴘᴀɴᴇʟ</bold>",
                 List.of(
                         "",
-                        "<gray>Close this menu."
+                        "<gray>ᴍᴀɴᴀɢᴇ ᴄᴀᴛᴇɢᴏʀɪᴇѕ,",
+                        "<gray>ʀᴇᴡᴀʀᴅѕ ᴀɴᴅ ѕᴇᴛᴛɪɴɢѕ.",
+                        "",
+                        "<yellow>ᴄʟɪᴄᴋ ᴛᴏ ᴏᴘᴇɴ"
+                )
+        ));
+
+        inventory.setItem(40, ItemUtil.create(
+                Material.BARRIER,
+                1,
+                "<red><bold>ᴄʟᴏѕᴇ</bold>",
+                List.of(
+                        "",
+                        "<gray>ᴄʟᴏѕᴇ ᴛʜɪѕ ᴍᴇɴᴜ."
                 )
         ));
 
         player.openInventory(inventory);
-    }
-
-    private int getSlot(
-            FileConfiguration config,
-            String path,
-            int fallback,
-            int size
-    ) {
-        int slot = config.getInt(path, fallback);
-
-        if (slot < 0 || slot >= size) {
-            return Math.max(0, Math.min(fallback, size - 1));
-        }
-
-        return slot;
     }
 }
