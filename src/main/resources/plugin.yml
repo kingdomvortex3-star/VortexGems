@@ -1,0 +1,40 @@
+name: VortexGems
+version: 1.0.0
+main: my.kingdomvortex.vortexgems.VortexGems
+api-version: '26.3'
+author: KingdomVortex
+description: Premium Gems Economy and Exchange System
+
+depend:
+  - Vault
+
+softdepend:
+  - PlaceholderAPI
+
+commands:
+  gems:
+    description: Main Gems command
+    aliases:
+      - gem
+
+  gemsadmin:
+    description: Gems administration
+    aliases:
+      - gadmin
+
+permissions:
+  vortexgems.admin:
+    description: Full Gems administration
+    default: op
+
+  vortexgems.editor:
+    description: Edit Gems categories and rewards
+    default: op
+
+  vortexgems.reload:
+    description: Reload Gems configuration
+    default: op
+
+  vortexgems.use:
+    description: Use Gems system
+    default: true
