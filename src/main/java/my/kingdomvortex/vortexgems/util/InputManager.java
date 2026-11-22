@@ -2,12 +2,12 @@
 package my.kingdomvortex.vortexgems.util;
 
 import my.kingdomvortex.vortexgems.VortexGems;
+import io.papermc.paper.event.player.AsyncChatEvent;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
-import org.bukkit.event.player.AsyncChatEvent;
 
 import java.util.Map;
 import java.util.UUID;
@@ -17,6 +17,7 @@ import java.util.function.Consumer;
 public final class InputManager implements Listener {
 
     private final VortexGems plugin;
+
     private final Map<UUID, Consumer<String>> pendingInputs =
             new ConcurrentHashMap<>();
 
@@ -63,7 +64,8 @@ public final class InputManager implements Listener {
         event.setCancelled(true);
 
         String input = PlainTextComponentSerializer.plainText()
-                .serialize(event.message()).trim();
+                .serialize(event.message())
+                .trim();
 
         if (input.equalsIgnoreCase("cancel")) {
             pendingInputs.remove(uuid);
