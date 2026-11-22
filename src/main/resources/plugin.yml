@@ -1,0 +1,29 @@
+name: VortexGems
+version: '${version}'
+main: my.kingdomvortex.vortexgems.VortexGems
+api-version: '26.1'
+author: KingdomVortex
+description: Complete Gems Economy and GUI Management System
+
+softdepend:
+  - Vault
+  - PlaceholderAPI
+
+commands:
+  gems:
+    description: VortexGems player command
+    aliases: [gem]
+
+  gemsadmin:
+    description: VortexGems administration
+    aliases: [gadmin]
+
+permissions:
+  vortexgems.use:
+    default: true
+
+  vortexgems.admin:
+    default: op
+
+  vortexgems.pay:
+    default: true
