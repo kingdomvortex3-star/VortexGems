@@ -6,9 +6,8 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
-import org.bukkit.event.player.PlayerQuitEvent;
 
-public class PlayerListener implements Listener {
+public final class PlayerListener implements Listener {
 
     private final VortexGems plugin;
 
@@ -20,25 +19,31 @@ public class PlayerListener implements Listener {
     public void onPlayerJoin(PlayerJoinEvent event) {
         Player player = event.getPlayer();
 
-        plugin.getGemsManager().createAccount(player.getUniqueId());
+        plugin.getGemsManager().createAccount(
+                player.getUniqueId(),
+                player.getName()
+        );
 
-        if (plugin.getConfig().getBoolean("settings.join-message.enabled", false)) {
-            String message = plugin.getConfig().getString(
-                    "settings.join-message.message",
-                    "<gray>Welcome back, <white>{player}<gray>!"
-            );
-
-            player.sendMessage(ColorUtil.text(
-                    message.replace("{player}", player.getName())
-                            .replace("{balance}", String.valueOf(
-                                    plugin.getGemsManager().getBalance(player.getUniqueId())
-                            ))
-            ));
+        if (!plugin.getConfig().getBoolean(
+                "settings.join-message.enabled", false
+        )) {
+            return;
         }
-    }
 
-    @EventHandler
-    public void onPlayerQuit(PlayerQuitEvent event) {
-        // Player data is stored directly in SQLite.
+        String message = plugin.getConfig().getString(
+                "settings.join-message.message",
+                "<gray>Welcome back, <white>{player}<gray>!"
+        );
+
+        message = ColorUtil.replace(message, "player", player.getName());
+        message = ColorUtil.replace(
+                message,
+                "balance",
+                ColorUtil.format(
+                        plugin.getGemsManager().getBalance(player.getUniqueId())
+                )
+        );
+
+        player.sendMessage(ColorUtil.text(message));
     }
-                                     }
+}
