@@ -1,0 +1,35 @@
+rewards:
+  iron_golem_spawner:
+    enabled: true
+    category: spawner
+    name: "<aqua><bold>IRON GOLEM SPAWNER</bold>"
+    material: SPAWNER
+    amount: 1
+    price: 500
+    slot: 20
+    type: ITEM
+    commands: []
+    lore:
+      - ""
+      - "<gray>Iron Golem Spawner"
+      - ""
+      - "<yellow>Price: <white>500 Gems"
+      - "<green>Click to purchase"
+
+  rare_key:
+    enabled: true
+    category: keys
+    name: "<gold><bold>RARE KEY</bold>"
+    material: TRIPWIRE_HOOK
+    amount: 1
+    price: 250
+    slot: 20
+    type: COMMAND
+    commands:
+      - "ac key give {player} rare 1"
+    lore:
+      - ""
+      - "<gray>Receive one Rare Key."
+      - ""
+      - "<yellow>Price: <white>250 Gems"
+      - "<green>Click to purchase"
