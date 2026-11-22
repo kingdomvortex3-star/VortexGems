@@ -107,6 +107,7 @@ public final class MenuListener implements Listener {
                 }
 
                 inventory.setItem(13, cursor.clone());
+
                 event.setCursor(
                         current != null && current.getType() != Material.HOPPER
                                 ? current.clone()
@@ -119,7 +120,6 @@ public final class MenuListener implements Listener {
 
         if (slot == 11) {
             player.closeInventory();
-
             new RewardCreateMenu(plugin).promptPrice(player, category);
             return;
         }
@@ -459,8 +459,6 @@ public final class MenuListener implements Listener {
             return;
         }
 
-        int index = 0;
-
         for (String id : plugin.getRewardManager().getRewardIds()) {
             if (!plugin.getRewardManager().getCategory(id)
                     .equalsIgnoreCase(category)) {
@@ -496,27 +494,147 @@ public final class MenuListener implements Listener {
         }
 
         switch (slot) {
+            case 10 -> editGemPrice(player);
+
             case 12 -> {
                 boolean enabled = plugin.getConfig().getBoolean(
                         "settings.transfer.enabled", true
                 );
-                plugin.getConfig().set("settings.transfer.enabled", !enabled);
+
+                plugin.getConfig().set(
+                        "settings.transfer.enabled", !enabled
+                );
+
                 plugin.saveConfig();
                 plugin.getMenuManager().openSettings(player);
             }
+
             case 14 -> {
                 boolean enabled = plugin.getConfig().getBoolean(
                         "settings.admin.op-bypass", true
                 );
-                plugin.getConfig().set("settings.admin.op-bypass", !enabled);
+
+                plugin.getConfig().set(
+                        "settings.admin.op-bypass", !enabled
+                );
+
                 plugin.saveConfig();
                 plugin.getMenuManager().openSettings(player);
             }
+
+            case 16 -> editLeaderboardLimit(player);
+
             case 31 -> {
                 plugin.reloadPlugin();
+                player.sendMessage(ColorUtil.text(
+                        "<green>VortexGems configuration reloaded."
+                ));
                 plugin.getMenuManager().openSettings(player);
             }
+
             case 40 -> plugin.getMenuManager().openAdmin(player);
         }
+    }
+
+    private void editGemPrice(Player player) {
+        if (!isAdmin(player)) {
+            player.closeInventory();
+            return;
+        }
+
+        player.closeInventory();
+
+        player.sendMessage(ColorUtil.text(
+                "<gold><bold>GEMS ECONOMY"
+        ));
+
+        player.sendMessage(ColorUtil.text(
+                "<gray>Current price: <yellow>"
+                        + plugin.getEconomyManager().getPricePerGem()
+                        + " money <gray>per 1 Gem."
+        ));
+
+        player.sendMessage(ColorUtil.text(
+                "<yellow>Enter the new price in chat."
+        ));
+
+        plugin.getInputManager().request(player, input -> {
+            if (!isAdmin(player)) {
+                return;
+            }
+
+            double price;
+
+            try {
+                price = Double.parseDouble(input.replace(",", ""));
+            } catch (NumberFormatException exception) {
+                player.sendMessage(ColorUtil.text(
+                        "<red>Invalid price. Please enter a number."
+                ));
+                plugin.getMenuManager().openSettings(player);
+                return;
+            }
+
+            if (!Double.isFinite(price) || price <= 0) {
+                player.sendMessage(ColorUtil.text(
+                        "<red>Price must be greater than zero."
+                ));
+                plugin.getMenuManager().openSettings(player);
+                return;
+            }
+
+            plugin.getConfig().set(
+                    "settings.economy.price-per-gem", price
+            );
+
+            plugin.saveConfig();
+
+            player.sendMessage(ColorUtil.text(
+                    "<green>Gem price updated to <yellow>"
+                            + price + " money <green>per Gem."
+            ));
+
+            plugin.getMenuManager().openSettings(player);
+        });
+    }
+
+    private void editLeaderboardLimit(Player player) {
+        player.closeInventory();
+
+        player.sendMessage(ColorUtil.text(
+                "<yellow>Enter the new leaderboard limit in chat."
+        ));
+
+        plugin.getInputManager().request(player, input -> {
+            int limit;
+
+            try {
+                limit = Integer.parseInt(input);
+            } catch (NumberFormatException exception) {
+                player.sendMessage(ColorUtil.text(
+                        "<red>Please enter a valid whole number."
+                ));
+                plugin.getMenuManager().openSettings(player);
+                return;
+            }
+
+            if (limit < 1 || limit > 100) {
+                player.sendMessage(ColorUtil.text(
+                        "<red>Limit must be between 1 and 100."
+                ));
+                plugin.getMenuManager().openSettings(player);
+                return;
+            }
+
+            plugin.getConfig().set("settings.leaderboard.limit", limit);
+            plugin.saveConfig();
+
+            player.sendMessage(ColorUtil.text(
+                    "<green>Leaderboard limit updated to <yellow>"
+                            + limit + "<green>."
+            ));
+
+            plugin.getMenuManager().openSettings(player);
+        });
     }
 }
