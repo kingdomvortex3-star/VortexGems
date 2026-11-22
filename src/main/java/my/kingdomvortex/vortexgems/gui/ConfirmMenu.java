@@ -88,7 +88,9 @@ public final class ConfirmMenu {
         inventory.setItem(13, preview);
 
         inventory.setItem(11, ItemUtil.create(
-                balance >= price ? Material.LIME_STAINED_GLASS_PANE : Material.BARRIER,
+                balance >= price
+                        ? Material.LIME_STAINED_GLASS_PANE
+                        : Material.BARRIER,
                 1,
                 balance >= price
                         ? "<green><bold>ᴄᴏɴꜰɪʀᴍ ᴘᴜʀᴄʜᴀѕᴇ</bold>"
