@@ -1,3 +1,4 @@
+
 package my.kingdomvortex.vortexgems.gui;
 
 import my.kingdomvortex.vortexgems.VortexGems;
@@ -19,21 +20,14 @@ public final class SettingsMenu {
     }
 
     public void open(Player player) {
-        int size = plugin.getConfig().getInt("gui.settings.size", 45);
+        int size = 45;
 
-        if (size < 9 || size > 54 || size % 9 != 0) {
-            size = 45;
-        }
-
-        MenuHolder holder = new MenuHolder("SETTINGS");
+        MenuHolder holder = new MenuHolder("settings");
 
         Inventory inventory = Bukkit.createInventory(
                 holder,
                 size,
-                ColorUtil.text(plugin.getConfig().getString(
-                        "gui.settings.title",
-                        "<dark_gray>Gems Settings"
-                ))
+                ColorUtil.text("<dark_gray><bold>VORTEX GEMS SETTINGS")
         );
 
         holder.setInventory(inventory);
@@ -43,85 +37,100 @@ public final class SettingsMenu {
         }
 
         double price = plugin.getEconomyManager().getPricePerGem();
-        boolean transfer = plugin.getConfig().getBoolean(
-                "settings.transfer.enabled", true
-        );
-        boolean bypass = plugin.getConfig().getBoolean(
-                "settings.admin.op-bypass", true
-        );
-        int leaderboard = plugin.getConfig().getInt(
-                "settings.leaderboard.limit", 10
-        );
 
         inventory.setItem(10, ItemUtil.create(
                 Material.GOLD_INGOT,
                 1,
-                "<gold><bold>ECONOMY SETTINGS</bold>",
+                "<gold><bold>GEMS ECONOMY",
                 List.of(
                         "",
-                        "<gray>Price per Gem:",
-                        "<yellow>" + String.format("%,.2f", price),
+                        "<gray>Set the price for purchasing Gems.",
                         "",
-                        "<gray>Configure purchase price.",
-                        "<yellow>Use config.yml to change."
+                        "<yellow>Current price:",
+                        "<white>" + ColorUtil.format((long) price)
+                                + " money <gray>/ 1 Gem",
+                        "",
+                        "<green>Click to change price"
                 )
         ));
+
+        boolean transferEnabled = plugin.getConfig().getBoolean(
+                "transfer.enabled", true
+        );
 
         inventory.setItem(12, ItemUtil.create(
                 Material.EMERALD,
                 1,
-                "<green><bold>TRANSFER SETTINGS</bold>",
+                "<green><bold>PLAYER TRANSFER",
                 List.of(
                         "",
-                        "<gray>Player-to-player transfers:",
-                        transfer ? "<green>ENABLED" : "<red>DISABLED",
+                        "<gray>Allow players to transfer Gems.",
                         "",
-                        "<yellow>Click to toggle"
+                        "<yellow>Status: " + (transferEnabled
+                                ? "<green>ENABLED"
+                                : "<red>DISABLED"),
+                        "",
+                        "<green>Click to toggle"
                 )
         ));
+
+        boolean opBypass = plugin.getConfig().getBoolean(
+                "admin.op-bypass", true
+        );
 
         inventory.setItem(14, ItemUtil.create(
                 Material.PLAYER_HEAD,
                 1,
-                "<aqua><bold>ADMIN OP BYPASS</bold>",
+                "<aqua><bold>ADMIN OP BYPASS",
                 List.of(
                         "",
-                        "<gray>Allow OP to bypass admin permission:",
-                        bypass ? "<green>ENABLED" : "<red>DISABLED",
+                        "<gray>Allow server operators to bypass",
+                        "<gray>the admin permission requirement.",
                         "",
-                        "<yellow>Click to toggle"
+                        "<yellow>Status: " + (opBypass
+                                ? "<green>ENABLED"
+                                : "<red>DISABLED"),
+                        "",
+                        "<green>Click to toggle"
                 )
         ));
+
+        int leaderboardLimit = plugin.getConfig().getInt(
+                "leaderboard.limit", 10
+        );
 
         inventory.setItem(16, ItemUtil.create(
                 Material.HOPPER,
                 1,
-                "<light_purple><bold>LEADERBOARD SETTINGS</bold>",
+                "<light_purple><bold>LEADERBOARD LIMIT",
                 List.of(
                         "",
-                        "<gray>Displayed entries:",
-                        "<yellow>" + leaderboard,
+                        "<gray>Set the number of players",
+                        "<gray>shown on the leaderboard.",
                         "",
-                        "<gray>Configure in config.yml."
+                        "<yellow>Current limit:",
+                        "<white>" + leaderboardLimit + " players",
+                        "",
+                        "<green>Click to change"
                 )
         ));
 
         inventory.setItem(31, ItemUtil.create(
                 Material.WRITABLE_BOOK,
                 1,
-                "<yellow><bold>RELOAD CONFIGURATION</bold>",
+                "<yellow><bold>RELOAD CONFIGURATION",
                 List.of(
                         "",
                         "<gray>Reload plugin configuration files.",
                         "",
-                        "<yellow>Click to reload"
+                        "<green>Click to reload"
                 )
         ));
 
         inventory.setItem(40, ItemUtil.create(
                 Material.ARROW,
                 1,
-                "<red><bold>BACK</bold>",
+                "<red><bold>BACK",
                 List.of(
                         "",
                         "<gray>Return to admin menu."
