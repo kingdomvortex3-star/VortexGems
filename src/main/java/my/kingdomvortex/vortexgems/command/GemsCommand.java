@@ -30,6 +30,13 @@ public final class GemsCommand implements CommandExecutor, TabCompleter {
             String label,
             String[] args
     ) {
+        // GIVE: admin command, supports console and players.
+        if (args.length > 0
+                && args[0].equalsIgnoreCase("give")) {
+            give(sender, args);
+            return true;
+        }
+
         if (!(sender instanceof Player player)) {
             sender.sendMessage("This command can only be used in-game.");
             return true;
@@ -72,7 +79,112 @@ public final class GemsCommand implements CommandExecutor, TabCompleter {
         return true;
     }
 
-    private boolean hasAdminPermission(Player player) {
+    private void give(CommandSender sender, String[] args) {
+        if (!hasAdminPermission(sender)) {
+            sender.sendMessage(ColorUtil.text(
+                    "<red>You don't have permission to give Gems."
+            ));
+            return;
+        }
+
+        if (args.length != 3) {
+            sender.sendMessage(ColorUtil.text(
+                    "<red>Usage: /gems give <player> <amount>"
+            ));
+            return;
+        }
+
+        OfflinePlayer target = Bukkit.getOfflinePlayer(args[1]);
+
+        if (target.getName() == null
+                || (!target.hasPlayedBefore() && !target.isOnline())) {
+            sender.sendMessage(ColorUtil.text(
+                    "<red>Player not found. The player must have joined the server before."
+            ));
+            return;
+        }
+
+        long amount;
+
+        try {
+            amount = Long.parseLong(args[2]);
+        } catch (NumberFormatException exception) {
+            sender.sendMessage(ColorUtil.text(
+                    "<red>Invalid Gems amount."
+            ));
+            return;
+        }
+
+        if (amount <= 0) {
+            sender.sendMessage(ColorUtil.text(
+                    "<red>Amount must be greater than zero."
+            ));
+            return;
+        }
+
+        boolean success = plugin.getGemsManager().addBalance(
+                target.getUniqueId(),
+                target.getName(),
+                amount
+        );
+
+        if (!success) {
+            sender.sendMessage(ColorUtil.text(
+                    "<red>Failed to give Gems. Please check the console."
+            ));
+            return;
+        }
+
+        plugin.getTransactionManager().record(
+                target.getUniqueId(),
+                "ADMIN_GIVE",
+                amount,
+                "Gems given by " + sender.getName()
+        );
+
+        String formatted = ColorUtil.formatGems(amount);
+
+        sender.sendMessage(ColorUtil.text(
+                "<dark_gray>━━━━━━━━━━━━━━━━━━━━"
+        ));
+
+        sender.sendMessage(ColorUtil.text(
+                "<green><bold>GEMS GIVEN SUCCESSFULLY"
+        ));
+
+        sender.sendMessage(ColorUtil.text(
+                "<gray>Player: <white>" + target.getName()
+        ));
+
+        sender.sendMessage(ColorUtil.text(
+                "<gray>Amount: <aqua>+" + formatted + " Gems"
+        ));
+
+        sender.sendMessage(ColorUtil.text(
+                "<dark_gray>━━━━━━━━━━━━━━━━━━━━"
+        ));
+
+        if (target.isOnline() && target.getPlayer() != null) {
+            target.getPlayer().sendMessage(ColorUtil.text(
+                    "<dark_gray>━━━━━━━━━━━━━━━━━━━━"
+            ));
+
+            target.getPlayer().sendMessage(ColorUtil.text(
+                    "<green><bold>GEMS RECEIVED"
+            ));
+
+            target.getPlayer().sendMessage(ColorUtil.text(
+                    "<gray>You received <aqua>+" + formatted
+                            + " Gems <gray>from an administrator."
+            ));
+
+            target.getPlayer().sendMessage(ColorUtil.text(
+                    "<dark_gray>━━━━━━━━━━━━━━━━━━━━"
+            ));
+        }
+    }
+
+    private boolean hasAdminPermission(CommandSender sender) {
         boolean opBypass = plugin.getConfig().getBoolean(
                 "settings.admin.op-bypass",
                 true
@@ -83,8 +195,14 @@ public final class GemsCommand implements CommandExecutor, TabCompleter {
                 "vortexgems.admin"
         );
 
-        return player.hasPermission(permission)
-                || (opBypass && player.isOp());
+        return sender.hasPermission(permission)
+                || (opBypass
+                && sender instanceof Player player
+                && player.isOp());
+    }
+
+    private boolean hasAdminPermission(Player player) {
+        return hasAdminPermission((CommandSender) player);
     }
 
     private void showBalance(Player player, String[] args) {
@@ -100,15 +218,26 @@ public final class GemsCommand implements CommandExecutor, TabCompleter {
                     target.getUniqueId()
             );
 
-            player.sendMessage(ColorUtil.text("<dark_gray>━━━━━━━━━━━━━━━━━━━━"));
-            player.sendMessage(ColorUtil.text("<gold><bold>GEMS BALANCE"));
+            player.sendMessage(ColorUtil.text(
+                    "<dark_gray>━━━━━━━━━━━━━━━━━━━━"
+            ));
+
+            player.sendMessage(ColorUtil.text(
+                    "<gold><bold>GEMS BALANCE"
+            ));
+
             player.sendMessage(ColorUtil.text(
                     "<gray>Player: <white>" + target.getName()
             ));
+
             player.sendMessage(ColorUtil.text(
-                    "<gray>Balance: <aqua>" + ColorUtil.formatGems(balance)
+                    "<gray>Balance: <aqua>"
+                            + ColorUtil.formatGems(balance)
             ));
-            player.sendMessage(ColorUtil.text("<dark_gray>━━━━━━━━━━━━━━━━━━━━"));
+
+            player.sendMessage(ColorUtil.text(
+                    "<dark_gray>━━━━━━━━━━━━━━━━━━━━"
+            ));
             return;
         }
 
@@ -116,15 +245,32 @@ public final class GemsCommand implements CommandExecutor, TabCompleter {
                 player.getUniqueId()
         );
 
-        player.sendMessage(ColorUtil.text("<dark_gray>━━━━━━━━━━━━━━━━━━━━"));
-        player.sendMessage(ColorUtil.text("<gold><bold>YOUR GEMS"));
         player.sendMessage(ColorUtil.text(
-                "<gray>Balance: <aqua>" + ColorUtil.formatGems(balance)
+                "<dark_gray>━━━━━━━━━━━━━━━━━━━━"
         ));
-        player.sendMessage(ColorUtil.text("<dark_gray>━━━━━━━━━━━━━━━━━━━━"));
+
+        player.sendMessage(ColorUtil.text(
+                "<gold><bold>YOUR GEMS"
+        ));
+
+        player.sendMessage(ColorUtil.text(
+                "<gray>Balance: <aqua>"
+                        + ColorUtil.formatGems(balance)
+        ));
+
+        player.sendMessage(ColorUtil.text(
+                "<dark_gray>━━━━━━━━━━━━━━━━━━━━"
+        ));
     }
 
     private void transfer(Player player, String[] args) {
+        if (!player.hasPermission("vortexgems.pay")) {
+            player.sendMessage(ColorUtil.text(
+                    "<red>You don't have permission to transfer Gems."
+            ));
+            return;
+        }
+
         if (!plugin.getConfig().getBoolean(
                 "settings.transfer.enabled",
                 true
@@ -179,10 +325,10 @@ public final class GemsCommand implements CommandExecutor, TabCompleter {
 
         if (amount < minimum || amount > maximum) {
             player.sendMessage(ColorUtil.text(
-                    "<red>Transfer amount must be between <white>" +
-                            ColorUtil.formatGems(minimum) +
-                            " <red>and <white>" +
-                            ColorUtil.formatGems(maximum)
+                    "<red>Transfer amount must be between <white>"
+                            + ColorUtil.formatGems(minimum)
+                            + " <red>and <white>"
+                            + ColorUtil.formatGems(maximum)
             ));
             return;
         }
@@ -219,37 +365,53 @@ public final class GemsCommand implements CommandExecutor, TabCompleter {
         String formatted = ColorUtil.formatGems(amount);
 
         player.sendMessage(ColorUtil.text(
-                "<green>You sent <aqua>" + formatted +
-                        " <green>to <white>" + target.getName() + "<green>."
+                "<green>You sent <aqua>" + formatted
+                        + " <green>to <white>" + target.getName() + "<green>."
         ));
 
         target.sendMessage(ColorUtil.text(
-                "<green>You received <aqua>" + formatted +
-                        " <green>from <white>" + player.getName() + "<green>."
+                "<green>You received <aqua>" + formatted
+                        + " <green>from <white>" + player.getName() + "<green>."
         ));
     }
 
     private void sendHelp(Player player) {
-        player.sendMessage(ColorUtil.text("<dark_gray>━━━━━━━━━━━━━━━━━━━━"));
-        player.sendMessage(ColorUtil.text("<gold><bold>VORTEX GEMS"));
+        player.sendMessage(ColorUtil.text(
+                "<dark_gray>━━━━━━━━━━━━━━━━━━━━"
+        ));
+
+        player.sendMessage(ColorUtil.text(
+                "<gold><bold>VORTEX GEMS"
+        ));
+
         player.sendMessage(ColorUtil.text(
                 "<yellow>/gems <gray>- Open Gems menu"
         ));
+
         player.sendMessage(ColorUtil.text(
                 "<yellow>/gems edit <gray>- Open admin editor"
         ));
+
+        player.sendMessage(ColorUtil.text(
+                "<yellow>/gems give <player> <amount> <gray>- Give Gems (Admin)"
+        ));
+
         player.sendMessage(ColorUtil.text(
                 "<yellow>/gems balance [player] <gray>- Check balance"
         ));
+
         player.sendMessage(ColorUtil.text(
                 "<yellow>/gems pay <player> <amount> <gray>- Transfer Gems"
         ));
+
         player.sendMessage(ColorUtil.text(
                 "<yellow>/gems shop <gray>- Open reward shop"
         ));
+
         player.sendMessage(ColorUtil.text(
                 "<yellow>/gems buy <gray>- Buy Gems"
         ));
+
         player.sendMessage(ColorUtil.text(
                 "<dark_gray>━━━━━━━━━━━━━━━━━━━━"
         ));
@@ -267,6 +429,7 @@ public final class GemsCommand implements CommandExecutor, TabCompleter {
         if (args.length == 1) {
             suggestions.addAll(List.of(
                     "edit",
+                    "give",
                     "balance",
                     "bal",
                     "pay",
@@ -276,22 +439,57 @@ public final class GemsCommand implements CommandExecutor, TabCompleter {
                     "buy",
                     "help"
             ));
-        } else if (args.length == 2 &&
-                List.of("pay", "transfer", "balance", "bal")
-                        .contains(args[0].toLowerCase(Locale.ROOT))) {
+
+        } else if (args.length == 2
+                && args[0].equalsIgnoreCase("give")) {
+
+            if (hasAdminPermission(sender)) {
+                for (OfflinePlayer offline : Bukkit.getOfflinePlayers()) {
+                    if (offline.getName() != null) {
+                        suggestions.add(offline.getName());
+                    }
+                }
+            }
+
+        } else if (args.length == 3
+                && args[0].equalsIgnoreCase("give")) {
+
+            if (hasAdminPermission(sender)) {
+                suggestions.addAll(List.of(
+                        "100",
+                        "500",
+                        "1000",
+                        "5000",
+                        "10000"
+                ));
+            }
+
+        } else if (args.length == 2
+                && List.of(
+                        "pay",
+                        "transfer",
+                        "balance",
+                        "bal"
+                ).contains(args[0].toLowerCase(Locale.ROOT))) {
+
             for (Player online : Bukkit.getOnlinePlayers()) {
                 suggestions.add(online.getName());
             }
-        } else if (args.length == 3 &&
-                List.of("pay", "transfer")
-                        .contains(args[0].toLowerCase(Locale.ROOT))) {
+
+        } else if (args.length == 3
+                && List.of(
+                        "pay",
+                        "transfer"
+                ).contains(args[0].toLowerCase(Locale.ROOT))) {
+
             suggestions.addAll(List.of("100", "500", "1000"));
         }
 
         String input = args[args.length - 1].toLowerCase(Locale.ROOT);
 
         return suggestions.stream()
-                .filter(value -> value.toLowerCase(Locale.ROOT).startsWith(input))
+                .filter(value -> value.toLowerCase(Locale.ROOT)
+                        .startsWith(input))
                 .toList();
     }
 }
