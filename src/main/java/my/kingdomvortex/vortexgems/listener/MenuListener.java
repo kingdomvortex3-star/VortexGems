@@ -186,40 +186,51 @@ public final class MenuListener implements Listener {
         }
     }
 
-    private void handleBuy(Player player, int slot, Inventory inventory) {
-        if (slot == inventory.getSize() - 5) {
-            plugin.getMenuManager().openMain(player);
-            return;
-        }
-
-        long amount = switch (slot) {
-            case 20 -> 10;
-            case 22 -> 50;
-            case 24 -> 100;
-            case 30 -> 500;
-            case 32 -> 1000;
-            default -> 0;
-        };
-
-        if (amount <= 0) {
-            return;
-        }
-
-        if (!plugin.getEconomyManager().buyGems(player, amount)) {
-            player.sendMessage(ColorUtil.text(
-                    "<red>Purchase failed. Check your money and purchase settings."
-            ));
-            return;
-        }
-
-        player.sendMessage(ColorUtil.text(
-                "<green>You purchased <aqua>"
-                        + ColorUtil.formatGems(amount)
-                        + " Gems<green>."
-        ));
-
-        plugin.getMenuManager().openBuy(player);
+    
+private void handleBuy(Player player, int slot, Inventory inventory) {
+    if (slot == inventory.getSize() - 5) {
+        plugin.getMenuManager().openMain(player);
+        return;
     }
+
+    my.kingdomvortex.vortexgems.gui.BuyMenu buyMenu =
+            new my.kingdomvortex.vortexgems.gui.BuyMenu(plugin);
+
+    if (slot == 20) {
+        buyMenu.decrease(player);
+        plugin.getMenuManager().openBuy(player);
+        return;
+    }
+
+    if (slot == 24) {
+        buyMenu.increase(player);
+        plugin.getMenuManager().openBuy(player);
+        return;
+    }
+
+    if (slot != 22) {
+        return;
+    }
+
+    long amount = buyMenu.getSelectedAmount(player);
+
+    if (!plugin.getEconomyManager().buyGems(player, amount)) {
+        player.sendMessage(ColorUtil.text(
+                "<red>Purchase failed. Check your money and purchase settings."
+        ));
+        return;
+    }
+
+    player.sendMessage(ColorUtil.text(
+            "<green>You purchased <aqua>"
+                    + ColorUtil.formatGems(amount)
+                    + " Gems<green>."
+    ));
+
+    buyMenu.resetSelection(player);
+    plugin.getMenuManager().openBuy(player);
+}
+
 
     private void handleCategory(Player player, int slot, Inventory inventory) {
         if (slot == inventory.getSize() - 5) {
