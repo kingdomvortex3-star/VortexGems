@@ -6,6 +6,7 @@ import my.kingdomvortex.vortexgems.util.ColorUtil;
 import my.kingdomvortex.vortexgems.util.ItemUtil;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
+import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 
@@ -16,10 +17,8 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public final class BuyMenu {
 
-    private static final Map<UUID, Long> SELECTED =
+    private static final Map<UUID, Long> SELECTED_AMOUNTS =
             new ConcurrentHashMap<>();
-
-    private static final long DEFAULT_AMOUNT = 1L;
 
     private final VortexGems plugin;
 
@@ -27,20 +26,55 @@ public final class BuyMenu {
         this.plugin = plugin;
     }
 
+    private long getMinimum() {
+        return Math.max(1, plugin.getConfig().getLong(
+                "settings.economy.minimum-purchase", 1
+        ));
+    }
+
+    private long getMaximum() {
+        return Math.max(getMinimum(), plugin.getConfig().getLong(
+                "settings.economy.maximum-purchase", 100000
+        ));
+    }
+
+    public long getSelectedAmount(Player player) {
+        long amount = SELECTED_AMOUNTS.getOrDefault(
+                player.getUniqueId(), getMinimum()
+        );
+
+        amount = Math.max(getMinimum(), Math.min(amount, getMaximum()));
+
+        SELECTED_AMOUNTS.put(player.getUniqueId(), amount);
+        return amount;
+    }
+
+    public void increase(Player player) {
+        long amount = getSelectedAmount(player);
+
+        if (amount < getMaximum()) {
+            SELECTED_AMOUNTS.put(player.getUniqueId(), amount + 1);
+        }
+    }
+
+    public void decrease(Player player) {
+        long amount = getSelectedAmount(player);
+
+        if (amount > getMinimum()) {
+            SELECTED_AMOUNTS.put(player.getUniqueId(), amount - 1);
+        }
+    }
+
+    public void resetSelection(Player player) {
+        SELECTED_AMOUNTS.remove(player.getUniqueId());
+    }
+
     public void open(Player player) {
-        long amount = getAmount(player);
-        double unitPrice = plugin.getEconomyManager().getPricePerGem();
-        double total = plugin.getEconomyManager().calculatePrice(amount);
+        FileConfiguration config = plugin.getConfig();
 
-        boolean enabled = plugin.getEconomyManager().isBuyingEnabled()
-                && plugin.getEconomyManager().isAvailable();
+        int size = config.getInt("gui.buy.size", 45);
 
-        long balance = plugin.getGemsManager()
-                .getBalance(player.getUniqueId());
-
-        int size = plugin.getConfig().getInt("gui.buy.size", 45);
-
-        if (size < 9 || size > 54 || size % 9 != 0) {
+        if (size < 36 || size > 54 || size % 9 != 0) {
             size = 45;
         }
 
@@ -49,7 +83,7 @@ public final class BuyMenu {
         Inventory inventory = Bukkit.createInventory(
                 holder,
                 size,
-                ColorUtil.text(plugin.getConfig().getString(
+                ColorUtil.text(config.getString(
                         "gui.buy.title",
                         "<dark_gray>ᴠᴏʀᴛᴇx ɢᴇᴍѕ | ʙᴜʏ"
                 ))
@@ -61,37 +95,47 @@ public final class BuyMenu {
             inventory.setItem(slot, ItemUtil.filler());
         }
 
+        boolean enabled = plugin.getEconomyManager().isBuyingEnabled()
+                && plugin.getEconomyManager().isAvailable();
+
+        long amount = getSelectedAmount(player);
+
+        double price = plugin.getEconomyManager().getPricePerGem();
+        double total = plugin.getEconomyManager().calculatePrice(amount);
+
+        long balance = plugin.getGemsManager()
+                .getBalance(player.getUniqueId());
+
         inventory.setItem(13, ItemUtil.create(
                 Material.EMERALD,
                 1,
-                "<gradient:#55ff55:#00aaaa><bold>ᴘᴜʀᴄʜᴀѕᴇ ɢᴇᴍѕ</bold></gradient>",
+                "<gradient:#55ff55:#00aaaa><bold>ʙᴜʏ ɢᴇᴍѕ</bold></gradient>",
                 List.of(
                         "",
                         "<gray>ʏᴏᴜʀ ʙᴀʟᴀɴᴄᴇ: <aqua>"
                                 + ColorUtil.format(balance) + " ɢᴇᴍѕ",
-                        "",
-                        "<gray>ѕᴇʟᴇᴄᴛᴇᴅ ᴀᴍᴏᴜɴᴛ: <aqua>"
+                        "<gray>ѕᴇʟᴇᴄᴛᴇᴅ: <aqua>"
                                 + ColorUtil.format(amount) + " ɢᴇᴍѕ",
                         "<gray>ᴘʀɪᴄᴇ ᴘᴇʀ ɢᴇᴍ: <gold>"
-                                + String.format("%,.2f", unitPrice),
+                                + String.format("%,.2f", price),
                         "<gray>ᴛᴏᴛᴀʟ ᴘʀɪᴄᴇ: <gold>"
                                 + String.format("%,.2f", total),
                         "",
                         enabled
                                 ? "<green>ᴘᴜʀᴄʜᴀѕɪɴɢ ɪѕ ᴀᴠᴀɪʟᴀʙʟᴇ"
-                                : "<red>ᴘᴜʀᴄʜᴀѕɪɴɢ ɪѕ ᴅɪѕᴀʙʟᴇᴅ"
+                                : "<red>ᴘᴜʀᴄʜᴀѕɪɴɢ ɪѕ ᴜɴᴀᴠᴀɪʟᴀʙʟᴇ"
                 )
         ));
 
         inventory.setItem(20, ItemUtil.create(
                 Material.RED_STAINED_GLASS_PANE,
                 1,
-                "<red><bold>- 1 ɢᴇᴍ</bold>",
+                "<red><bold>-1 ɢᴇᴍ</bold>",
                 List.of(
                         "",
-                        "<gray>ʀᴇᴅᴜᴄᴇ ᴘᴜʀᴄʜᴀѕᴇ ᴀᴍᴏᴜɴᴛ",
-                        "",
-                        "<yellow>ᴄʟɪᴄᴋ ᴛᴏ ʀᴇᴅᴜᴄᴇ"
+                        "<gray>ᴄʟɪᴄᴋ ᴛᴏ ʀᴇᴅᴜᴄᴇ 1 ɢᴇᴍ",
+                        "<dark_gray>ᴍɪɴɪᴍᴜᴍ: "
+                                + ColorUtil.format(getMinimum())
                 )
         ));
 
@@ -100,29 +144,29 @@ public final class BuyMenu {
                 1,
                 enabled
                         ? "<green><bold>ᴄᴏɴꜰɪʀᴍ ᴘᴜʀᴄʜᴀѕᴇ</bold>"
-                        : "<red><bold>ʙᴜʏɪɴɢ ᴅɪѕᴀʙʟᴇᴅ</bold>",
+                        : "<red><bold>ᴘᴜʀᴄʜᴀѕᴇ ᴅɪѕᴀʙʟᴇᴅ</bold>",
                 List.of(
                         "",
-                        "<gray>ʀᴇᴄᴇɪᴠᴇ: <aqua>"
+                        "<gray>ᴀᴍᴏᴜɴᴛ: <aqua>"
                                 + ColorUtil.format(amount) + " ɢᴇᴍѕ",
-                        "<gray>ᴘᴀʏ: <gold>"
+                        "<gray>ᴛᴏᴛᴀʟ: <gold>"
                                 + String.format("%,.2f", total),
                         "",
                         enabled
-                                ? "<yellow>ᴄʟɪᴄᴋ ᴛᴏ ᴘᴜʀᴄʜᴀѕᴇ"
-                                : "<red>ᴘᴜʀᴄʜᴀѕɪɴɢ ɪѕ ᴜɴᴀᴠᴀɪʟᴀʙʟᴇ"
+                                ? "<yellow>ᴄʟɪᴄᴋ ᴛᴏ ʙᴜʏ"
+                                : "<red>ᴠᴀᴜʟᴛ ᴏʀ ʙᴜʏɪɴɢ ɪѕ ᴜɴᴀᴠᴀɪʟᴀʙʟᴇ"
                 )
         ));
 
         inventory.setItem(24, ItemUtil.create(
                 Material.LIME_STAINED_GLASS_PANE,
                 1,
-                "<green><bold>+ 1 ɢᴇᴍ</bold>",
+                "<green><bold>+1 ɢᴇᴍ</bold>",
                 List.of(
                         "",
-                        "<gray>ɪɴᴄʀᴇᴀѕᴇ ᴘᴜʀᴄʜᴀѕᴇ ᴀᴍᴏᴜɴᴛ",
-                        "",
-                        "<yellow>ᴄʟɪᴄᴋ ᴛᴏ ɪɴᴄʀᴇᴀѕᴇ"
+                        "<gray>ᴄʟɪᴄᴋ ᴛᴏ ᴀᴅᴅ 1 ɢᴇᴍ",
+                        "<dark_gray>ᴍᴀxɪᴍᴜᴍ: "
+                                + ColorUtil.format(getMaximum())
                 )
         ));
 
@@ -137,54 +181,5 @@ public final class BuyMenu {
         ));
 
         player.openInventory(inventory);
-    }
-
-    public long getAmount(Player player) {
-        return SELECTED.getOrDefault(
-                player.getUniqueId(),
-                DEFAULT_AMOUNT
-        );
-    }
-
-    public void increase(Player player) {
-        long current = getAmount(player);
-
-        long maximum = plugin.getConfig().getLong(
-                "settings.economy.maximum-purchase",
-                100000
-        );
-
-        if (current >= maximum || current == Long.MAX_VALUE) {
-            player.sendMessage(ColorUtil.text(
-                    "<red>You have reached the maximum purchase amount."
-            ));
-            return;
-        }
-
-        SELECTED.put(player.getUniqueId(), current + 1);
-        open(player);
-    }
-
-    public void decrease(Player player) {
-        long current = getAmount(player);
-
-        long minimum = plugin.getConfig().getLong(
-                "settings.economy.minimum-purchase",
-                1
-        );
-
-        if (current <= minimum) {
-            player.sendMessage(ColorUtil.text(
-                    "<red>You have reached the minimum purchase amount."
-            ));
-            return;
-        }
-
-        SELECTED.put(player.getUniqueId(), current - 1);
-        open(player);
-    }
-
-    public void reset(Player player) {
-        SELECTED.remove(player.getUniqueId());
     }
 }
